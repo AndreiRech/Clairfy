@@ -14,17 +14,29 @@
 		4D4767A52DF37DA0006D8D5F /* Exceptions for "Clairfy" folder in "Clairfy" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				App/Info.plist,
+				Models/Audio.swift,
 			);
 			target = 4D47678F2DF37D9F006D8D5F /* Clairfy */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		4D73CC072DF89FDC0008D0D4 /* Exceptions for "Clairfy" folder in "Copy Bundle Resources" phase from "Clairfy" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 4D47678E2DF37D9F006D8D5F /* Resources */;
+			membershipExceptions = (
+				Models/Audio.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4D4767922DF37D9F006D8D5F /* Clairfy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				4D4767A52DF37DA0006D8D5F /* Exceptions for "Clairfy" folder in "Clairfy" target */,
+				4D73CC072DF89FDC0008D0D4 /* Exceptions for "Clairfy" folder in "Copy Bundle Resources" phase from "Clairfy" target */,
 			);
 			path = Clairfy;
 			sourceTree = "<group>";
