@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="AudioFile" representedClassName="AudioFile" syncable="YES" codeGenerationType="class">
+        <attribute name="audioPath" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="consultation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Consultation" inverseName="audio" inverseEntity="Consultation"/>
+    </entity>
+    <entity name="Consultation" representedClassName="Consultation" syncable="YES" codeGenerationType="class">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="audio" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AudioFile" inverseName="consultation" inverseEntity="AudioFile"/>
+        <relationship name="transcription" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Transcription" inverseName="consultation" inverseEntity="Transcription"/>
+    </entity>
+    <entity name="Transcription" representedClassName="Transcription" syncable="YES" codeGenerationType="class">
+        <attribute name="actionPoints" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformerName"/>
+        <attribute name="didctarized" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="keyWords" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformerName"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
+        <attribute name="transcription" optional="YES" attributeType="String"/>
+        <relationship name="consultation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Consultation" inverseName="transcription" inverseEntity="Consultation"/>
+    </entity>
 </model>
