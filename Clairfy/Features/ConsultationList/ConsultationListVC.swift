@@ -187,12 +187,12 @@ extension ConsultationListVC: UITableViewDataSource {
         if indexPath.row == 0 {
             cell.layer.cornerRadius = 16
             cell.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        }
-        
-        if indexPath.row == rows.count - 1 {
+        } else if indexPath.row == rows.count - 1 {
             cell.layer.cornerRadius = 16
             cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner]
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        } else {
+            cell.layer.cornerRadius = 0
         }
         
         return cell
