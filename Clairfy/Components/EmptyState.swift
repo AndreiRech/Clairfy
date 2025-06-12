@@ -73,7 +73,6 @@ extension EmptyState: ViewCodeProtocol {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            imageView.widthAnchor.constraint(equalToConstant: 31),
             imageView.heightAnchor.constraint(equalToConstant: 34),
             
             imageView.topAnchor.constraint(equalTo: self.topAnchor),
