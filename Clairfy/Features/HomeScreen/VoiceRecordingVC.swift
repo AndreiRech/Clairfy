@@ -24,15 +24,6 @@ class VoiceRecordingViewController: UIViewController {
     var currentImageIndex = 0
     
     // MARK: components & variables
-    
-    lazy var screenTitle: UILabel = {
-        var label = UILabel()
-        label.text = "Voice Recording"
-        label.textAlignment = .center
-        label.font = .systemFont(ofSize: 17, weight: .bold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
     lazy var recordingImage: UIImageView = {
         var imageView = UIImageView()
         imageView.image = .emptyRec
@@ -151,6 +142,9 @@ class VoiceRecordingViewController: UIViewController {
         view.backgroundColor = .secondarySystemBackground
         setupButtonActions()
         updateTimerLabel()
+        title = "Gravação de Áudio"
+        
+        navigationController?.navigationBar.prefersLargeTitles = false
     }
     
     // MARK: functions
@@ -389,7 +383,6 @@ class VoiceRecordingViewController: UIViewController {
 extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func addSubViews() {
-        view.addSubview(screenTitle)
         view.addSubview(recordingImage)
         view.addSubview(timerLabel)
         view.addSubview(soundWaveImage)
@@ -398,13 +391,8 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            
-            /// screenTitle constraints
-            screenTitle.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            screenTitle.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
             /// recordingImage constraints
-            recordingImage.topAnchor.constraint(equalTo: screenTitle.bottomAnchor, constant: 40),
+            recordingImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             recordingImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             /// timerLabel constraints
