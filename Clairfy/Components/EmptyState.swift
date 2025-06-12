@@ -23,7 +23,7 @@ class EmptyState: UIView {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont(name: "SFProText-Bold", size: 24)
         label.textAlignment = .center
-        label.text = "No audios yet"
+        label.text = "Ainda não há áudios"
         label.textColor = UIColor(named: "Label-Basic")
         return label
     }()
@@ -35,7 +35,7 @@ class EmptyState: UIView {
         label.textAlignment = .center
         label.numberOfLines = 0
         label.text = """
-            Record your first\n conversation and see\n how every word\n becomes care.
+            Construa o histórico do paciente\n desde a primeira conversa.
             """
         label.textColor = UIColor(named: "Label-Basic")
         return label
