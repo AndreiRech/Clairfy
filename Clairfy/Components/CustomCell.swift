@@ -28,7 +28,7 @@ class CustomCell: UITableViewCell {
         image.translatesAutoresizingMaskIntoConstraints = false
         image.contentMode = .scaleToFill
         image.image = UIImage(systemName: "chevron.right")
-        image.tintColor = .systemBlue
+        image.tintColor = .clairBlue
         return image
     }()
     
@@ -72,7 +72,7 @@ extension CustomCell: ViewCodeProtocol {
             
             image.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             image.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            image.widthAnchor.constraint(equalToConstant: 12),
+            image.widthAnchor.constraint(equalToConstant: 10),
             image.heightAnchor.constraint(equalToConstant: 16)
         ])
     }
