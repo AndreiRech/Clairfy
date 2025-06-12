@@ -15,7 +15,6 @@ private enum RecordingState {
 }
 
 class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
-    
     private var timer: Timer?
     private var elapsedTime: TimeInterval = 0
     // Substitua a variável isRecording por:
@@ -29,7 +28,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     private var recordings: [URL] = []
     
     // MARK: - components & variables
-    
     lazy var screenTitle: UILabel = {
         var label = UILabel()
         label.text = "Voice Recording"
@@ -159,7 +157,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     }
     
     // MARK: - functions
-        
     private func startRecording() {
             recordingState = .recording
             
@@ -350,17 +347,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         } catch {
             print("Erro ao iniciar gravação: \(error.localizedDescription)")
         }
-        
-        /*
-        // TODO: Implementar lógica de salvamento do áudio aqui
-        /// ver com Andrei 🙏
-        print("Lógica de salvamento do áudio será implementada aqui")
-            
-        // Exemplo futuro:
-        // audioRecorder.stop()
-        // saveToDatabase(audioFileURL)
-        // etc...
-         */
     }
     
     ///whatafuck
@@ -381,8 +367,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             } else {
                 stopRecordingAnimation()
             }
-        
-
             audioRecorder?.stop()
             audioRecorder = nil
             
@@ -391,8 +375,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             } catch {
                 print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
             }
-        
-        
         }
 
     // Inicia a animação
