@@ -2,24 +2,13 @@ import Foundation
 import CoreData
 
 final class Persistence: PersistenceProtocol {
-    static var defaultContext: NSManagedObjectContext {
-        let container = NSPersistentContainer(name: "Persistence")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                fatalError("Erro ao carregar persistência: \(error)")
-            }
-        }
-        return container.viewContext
-    }
-    static var shared = Persistence(context: Persistence.defaultContext)
+    static var shared = Persistence()
 
-    private let context: NSManagedObjectContext
-    
-    init(context: NSManagedObjectContext) {
-            self.context = context
-        }
-    
+    var context: NSManagedObjectContext?
+
     func createAudio(_ audio: AudioFileModel) {
+        guard let context else { return }
+        
         let newAudio = AudioFile(context: context)
         newAudio.id = audio.id
         newAudio.audioPath = audio.audioPath
@@ -28,6 +17,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getAllAudio() -> [AudioFileModel] {
+        guard let context else { return [] }
+        
         do {
             let request: NSFetchRequest<AudioFile> = AudioFile.fetchRequest()
             
@@ -40,6 +31,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getAudio(by id: UUID) -> AudioFileModel? {
+        guard let context else { return nil }
+        
         do {
             let request: NSFetchRequest<AudioFile> = AudioFile.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -52,6 +45,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func deleteAudio(by id: UUID) -> Bool {
+        guard let context else { return false }
+        
         do {
             let request: NSFetchRequest<AudioFile> = AudioFile.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -70,6 +65,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func createConsultation(_ consultation: ConsultationModel) {
+        guard let context else { return }
+        
         let newConsultation = Consultation(context: context)
         newConsultation.id = consultation.id
         newConsultation.title = consultation.title
@@ -81,6 +78,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getAllConsultations() -> [ConsultationModel] {
+        guard let context else { return [] }
+        
         do {
             let request: NSFetchRequest<Consultation> = Consultation.fetchRequest()
             
@@ -93,6 +92,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getConsultation(by id: UUID) -> ConsultationModel? {
+        guard let context else { return nil }
+        
         do {
             let request: NSFetchRequest<Consultation> = Consultation.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -105,6 +106,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func deleteConsultation(by id: UUID) -> Bool {
+        guard let context else { return false }
+        
         do {
             let request: NSFetchRequest<Consultation> = Consultation.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -123,6 +126,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func updateConsultation(_ consultation: ConsultationModel) -> Bool {
+        guard let context else { return false }
+        
         do {
             let request: NSFetchRequest<Consultation> = Consultation.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", consultation.id.uuidString)
@@ -155,6 +160,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func createTranscription(_ transcription: TranscriptionModel) {
+        guard let context else { return }
+        
         let newTranscription = Transcription(context: context)
         newTranscription.id = transcription.id
         newTranscription.transcription = transcription.transcription
@@ -167,6 +174,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getAllTranscriptions() -> [TranscriptionModel] {
+        guard let context else { return [] }
+        
         do {
             let request: NSFetchRequest<Transcription> = Transcription.fetchRequest()
             
@@ -179,6 +188,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func getTranscription(by id: UUID) -> TranscriptionModel? {
+        guard let context else { return nil }
+        
         do {
             let request: NSFetchRequest<Transcription> = Transcription.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -191,6 +202,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func deleteTranscription(by id: UUID) -> Bool {
+        guard let context else { return false }
+        
         do {
             let request: NSFetchRequest<Transcription> = Transcription.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id.uuidString)
@@ -209,6 +222,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func updateTranscription(_ transcription: TranscriptionModel) -> Bool {
+        guard let context else { return false }
+        
         do {
             let request: NSFetchRequest<Transcription> = Transcription.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", transcription.id.uuidString)
@@ -232,6 +247,8 @@ final class Persistence: PersistenceProtocol {
     }
     
     func save() {
+        guard let context else { return }
+        
         if context.hasChanges {
             do {
                 try context.save()
@@ -239,5 +256,34 @@ final class Persistence: PersistenceProtocol {
                 print(error)
             }
         }
+    }
+    
+    private var mockData: [ConsultationModel] = [
+        ConsultationModel(id: UUID(), title: "Consulta com Dr. House", date: Date(), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Psicoterapia com Dra. Ana", date: Date().addingTimeInterval(-86400), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
+        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil)
+    ]
+        
+    func getAllConsultationsMock() -> [ConsultationModel] {
+        return mockData
+    }
+        
+    func deleteConsultationMock(by id: UUID) -> Bool {
+        if let index = mockData.firstIndex(where: { $0.id == id }) {
+            mockData.remove(at: index)
+            return true
+        }
+        return false
     }
 }
