@@ -2,6 +2,20 @@ import UIKit
 
 class ConsultationListVC: UIViewController {
     // MARK: Subviews
+    lazy var searchButtonItem: UIBarButtonItem = {
+        return UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"),
+                               style: .plain,
+                               target: self,
+                               action: #selector(searchButtonTapped))
+    }()
+    
+    lazy var selectButtonItem: UIBarButtonItem = {
+       return UIBarButtonItem(title: "Selecionar",
+                              style: .plain,
+                              target: self,
+                              action: #selector(selectButtonTapped))
+    }()
+    
     lazy var tableView: UITableView = {
         var table = UITableView()
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +43,7 @@ class ConsultationListVC: UIViewController {
 
         /// Força o cálculo do layout
         DispatchQueue.main.async {
-            let iconSize = button.bounds.width * 0.1 // 40% do tamanho do botão
+            let iconSize = button.bounds.width * 0.1
             let symbolConfig = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .heavy)
             let playImage = UIImage(systemName: "circle.fill", withConfiguration: symbolConfig)
             button.setImage(playImage, for: .normal)
@@ -45,6 +59,8 @@ class ConsultationListVC: UIViewController {
         
         button.layer.borderColor = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1)
         button.layer.borderWidth = 3
+        
+        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
 
         return button
     }()
@@ -68,9 +84,17 @@ class ConsultationListVC: UIViewController {
         additionalSetup()
     }
     
-    func additionalSetup() {
-        title = "Consultations"
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         navigationController?.navigationBar.prefersLargeTitles = true
+    }
+    
+    func additionalSetup() {
+        title = "Áudios"
+        
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.rightBarButtonItems = [selectButtonItem, searchButtonItem]
+        
         view.backgroundColor = .secondarySystemBackground
         buildContent()
     }
@@ -160,5 +184,21 @@ extension ConsultationListVC: UITableViewDataSource {
         }
         
         return cell
+    }
+}
+
+extension ConsultationListVC {
+    @objc func searchButtonTapped() {
+        print("Search botão pressionado")
+    }
+    
+    @objc func selectButtonTapped() {
+        print("Selecionar botão pressionado")
+    }
+    
+    @objc func buttonTapped() {
+        let viewController = VoiceRecordingViewController()
+        navigationController?.pushViewController(viewController, animated: true)
+        navigationController?.isNavigationBarHidden = false
     }
 }
