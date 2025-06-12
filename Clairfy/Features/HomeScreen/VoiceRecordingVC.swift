@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 private enum RecordingState {
     case stopped
@@ -13,8 +14,7 @@ private enum RecordingState {
     case paused
 }
 
-class VoiceRecordingViewController: UIViewController {
-    
+class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     private var timer: Timer?
     private var elapsedTime: TimeInterval = 0
     // Substitua a variável isRecording por:
@@ -24,6 +24,10 @@ class VoiceRecordingViewController: UIViewController {
     var currentImageIndex = 0
     
     // MARK: components & variables
+    private var audioRecorder: AVAudioRecorder?
+    private var audioURL: URL?
+    private var recordings: [URL] = []
+
     lazy var recordingImage: UIImageView = {
         var imageView = UIImageView()
         imageView.image = .emptyRec
@@ -135,7 +139,7 @@ class VoiceRecordingViewController: UIViewController {
         return stackView
     }()
     
-    // MARK: "main"
+    // MARK: - "main"
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
@@ -147,8 +151,7 @@ class VoiceRecordingViewController: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = false
     }
     
-    // MARK: functions
-        
+    // MARK: - functions
     private func startRecording() {
             recordingState = .recording
             
@@ -311,14 +314,34 @@ class VoiceRecordingViewController: UIViewController {
         
     /// Função reservada para implementação futura do salvamento do áudio
     private func saveAudioRecording() {
-        // TODO: Implementar lógica de salvamento do áudio aqui
-        /// ver com Andrei 🙏
-        print("Lógica de salvamento do áudio será implementada aqui")
+        
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try audioSession.setActive(true)
             
-        // Exemplo futuro:
-        // audioRecorder.stop()
-        // saveToDatabase(audioFileURL)
-        // etc...
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
+            print("Audio Salvo com o nome: \(String(describing: audioURL))")
+            
+            guard let audioURL = audioURL else {
+                print("Erro ao criar URL para o áudio.")
+                return }
+            
+            let settings: [String: Any] = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 16000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            
+            audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
+            audioRecorder?.delegate = self
+            audioRecorder?.record()
+            
+        } catch {
+            print("Erro ao iniciar gravação: \(error.localizedDescription)")
+        }
     }
     
     ///whatafuck
@@ -338,6 +361,14 @@ class VoiceRecordingViewController: UIViewController {
                 startRecordingAnimation()
             } else {
                 stopRecordingAnimation()
+            }
+            audioRecorder?.stop()
+            audioRecorder = nil
+            
+            do {
+                try AVAudioSession.sharedInstance().setActive(false)
+            } catch {
+                print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
             }
         }
 
@@ -379,7 +410,7 @@ class VoiceRecordingViewController: UIViewController {
     
 }
 
-// MARK: addViews & setConstraints
+// MARK: - addViews & setConstraints
 extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func addSubViews() {
@@ -416,7 +447,7 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     }
 }
 
-// MARK: button functions
+// MARK: - button functions
 extension VoiceRecordingViewController {
     
     /// linkar botões com suas ações
@@ -438,16 +469,10 @@ extension VoiceRecordingViewController {
        
     @objc private func recordButtonTapped() {
            switch recordingState {
-           case .stopped:
-               if elapsedTime == 0 {
-                   showStartConfirmationAlert()
-               } else {
-                   startRecording()
-               }
+           case .stopped, .paused:
+               startRecording()
            case .recording:
                pauseRecording()
-           case .paused:
-               startRecording()
            }
        }
 }
