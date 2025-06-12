@@ -16,6 +16,12 @@ class ConsultationListVC: UIViewController {
                               action: #selector(selectButtonTapped))
     }()
     
+    lazy var emptyState: EmptyState = {
+       var emptyState = EmptyState()
+        emptyState.translatesAutoresizingMaskIntoConstraints = false
+        return emptyState
+    }()
+    
     lazy var tableView: UITableView = {
         var table = UITableView()
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -115,10 +121,14 @@ extension ConsultationListVC: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(tableView)
         view.addSubview(button)
+        view.addSubview(emptyState)
     }
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
+            emptyState.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyState.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 180),
+            
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
@@ -159,6 +169,8 @@ extension ConsultationListVC: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        self.emptyState.isHidden = !rows.isEmpty
+        self.tableView.isHidden = rows.isEmpty
         return rows.count
     }
     
