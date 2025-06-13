@@ -72,7 +72,7 @@ class ConsultationListVC: UIViewController {
     }()
     
     // MARK: Properties
-    var consultations = Persistence.shared.getAllConsultationsMock() {
+    var consultations = Persistence.shared.getAllConsultations() {
         didSet {
             buildContent()
             tableView.reloadData()
@@ -148,8 +148,8 @@ extension ConsultationListVC: UITableViewDelegate {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, complete in
             guard let self else { return }
             let id = self.getConsultation(by: indexPath).id
-            if Persistence.shared.deleteConsultationMock(by: id) {
-                self.consultations = Persistence.shared.getAllConsultationsMock()
+            if Persistence.shared.deleteConsultation(by: id) {
+                self.consultations = Persistence.shared.getAllConsultations()
                 complete(true)
             } else {
                 complete(false)
