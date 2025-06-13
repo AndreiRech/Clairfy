@@ -323,6 +323,12 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
             print("Audio Salvo com o nome: \(String(describing: audioURL))")
+//            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
+//            
+//            Persistence.shared.createAudio(audio)
+//            
+//            print(Persistence.shared.getAllAudio())
+//            Agora deve salvar o id do audio e passar para o lugar onde for criar a consultation com o titulo dela
             
             guard let audioURL = audioURL else {
                 print("Erro ao criar URL para o áudio.")
@@ -464,7 +470,19 @@ extension VoiceRecordingViewController {
     }
        
     @objc private func finishButtonTapped() {
-        showFinishConfirmationAlert()
+//        showFinishConfirmationAlert()
+        handleFinishRecording()
+        
+        let renameVC = RenameViewController()
+        let navController = UINavigationController(rootViewController: renameVC)
+
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
        
     @objc private func recordButtonTapped() {

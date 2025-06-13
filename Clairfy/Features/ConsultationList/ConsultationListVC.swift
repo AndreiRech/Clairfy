@@ -71,10 +71,8 @@ class ConsultationListVC: UIViewController {
         return button
     }()
     
-    lazy var viewPlaceholder: UIView = UIView()
-    
     // MARK: Properties
-    var consultations = Persistence.shared.getAllConsultationsMock() {
+    var consultations = Persistence.shared.getAllConsultations() {
         didSet {
             buildContent()
             tableView.reloadData()
@@ -83,7 +81,7 @@ class ConsultationListVC: UIViewController {
     
     var rows: [ConsultationModel] = []
 
-    // MARK: Functions
+    // MARK: Initializers
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
@@ -95,6 +93,7 @@ class ConsultationListVC: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
     }
     
+    // MARK: Functions
     func additionalSetup() {
         title = "Áudios"
         
@@ -149,8 +148,8 @@ extension ConsultationListVC: UITableViewDelegate {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, complete in
             guard let self else { return }
             let id = self.getConsultation(by: indexPath).id
-            if Persistence.shared.deleteConsultationMock(by: id) {
-                self.consultations = Persistence.shared.getAllConsultationsMock()
+            if Persistence.shared.deleteConsultation(by: id) {
+                self.consultations = Persistence.shared.getAllConsultations()
                 complete(true)
             } else {
                 complete(false)
