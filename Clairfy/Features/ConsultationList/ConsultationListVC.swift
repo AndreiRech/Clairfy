@@ -71,8 +71,6 @@ class ConsultationListVC: UIViewController {
         return button
     }()
     
-    lazy var viewPlaceholder: UIView = UIView()
-    
     // MARK: Properties
     var consultations = Persistence.shared.getAllConsultationsMock() {
         didSet {
@@ -83,7 +81,7 @@ class ConsultationListVC: UIViewController {
     
     var rows: [ConsultationModel] = []
 
-    // MARK: Functions
+    // MARK: Initializers
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
@@ -95,6 +93,7 @@ class ConsultationListVC: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
     }
     
+    // MARK: Functions
     func additionalSetup() {
         title = "Áudios"
         

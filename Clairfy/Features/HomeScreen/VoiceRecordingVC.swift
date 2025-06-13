@@ -464,7 +464,19 @@ extension VoiceRecordingViewController {
     }
        
     @objc private func finishButtonTapped() {
-        showFinishConfirmationAlert()
+//        showFinishConfirmationAlert()
+        handleFinishRecording()
+        
+        let renameVC = RenameViewController()
+        let navController = UINavigationController(rootViewController: renameVC)
+
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
        
     @objc private func recordButtonTapped() {
