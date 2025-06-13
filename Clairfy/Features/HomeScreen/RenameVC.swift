@@ -33,6 +33,7 @@ class RenameViewController: UIViewController {
         textField.textColor = .label
         textField.placeholder = "Insira seu título"
         textField.backgroundColor = .secondarySystemBackground
+        textField.delegate = self
         return textField
     }()
     
@@ -104,5 +105,24 @@ extension RenameViewController {
                                   animations: { window.rootViewController = navController })
             }
         }
+    }
+}
+
+extension RenameViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+        
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard let currentText = textField.text as NSString? else { return true }
+        
+        let newText = currentText.replacingCharacters(in: range, with: string)
+        
+        return newText.count <= 24
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        print(textField.text ?? "")
     }
 }
