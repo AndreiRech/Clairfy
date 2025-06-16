@@ -2,60 +2,32 @@ import UIKit
 
 class LoaderView: UIView {
     // MARK: Subviews
-    private let shapeLayer: CAShapeLayer = {
-        let layer = CAShapeLayer()
-        layer.fillColor = UIColor.clear.cgColor
-        layer.strokeColor = UIColor.label.cgColor
-        layer.lineWidth = 4
-        return layer
-    }()
+    private lazy var loaderCircleView = LoaderCircleView()
     
-    private let textLabel: UILabel = {
+    private lazy var textLabel: UILabel = {
         let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
         label.font = Fonts.title1
-        label.textColor = .label
+        label.textColor = .clairBlue
         label.textAlignment = .center
         label.text = "Analizando áudio..."
         return label
     }()
     
-    private let stackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [])
+    private lazy var stackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [loaderCircleView, textLabel])
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
         stackView.spacing = 8
+        stackView.alignment = .center
         return stackView
     }()
-    
-    // MARK: Functions
-    private func additionalSetup() {
-        let circularPath = UIBezierPath(arcCenter: center, radius: 20, startAngle: 0, endAngle: 2 * .pi, clockwise: true)
-
-        shapeLayer.path = circularPath.cgPath
-        shapeLayer.strokeColor = UIColor.systemBlue.cgColor
-        shapeLayer.lineWidth = 4
-        shapeLayer.fillColor = UIColor.clear.cgColor
-        shapeLayer.lineCap = .round
-
-        layer.addSublayer(shapeLayer)
-
-        startRotating()
-    }
-    
-    private func startRotating() {
-        let rotation = CABasicAnimation(keyPath: "transform.rotation")
-        rotation.toValue = 2 * Double.pi
-        rotation.duration = 1
-        rotation.isCumulative = true
-        rotation.repeatCount = .infinity
-
-        layer.add(rotation, forKey: "rotationAnimation")
-    }
     
     // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
-        additionalSetup()
+        loaderCircleView.startAnimation()
     }
     
     required init?(coder: NSCoder) {
