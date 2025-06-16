@@ -323,11 +323,19 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
             print("Audio Salvo com o nome: \(String(describing: audioURL))")
-//            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
-//            
-//            Persistence.shared.createAudio(audio)
+            //cria audio
+            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
+            //cria o objeto audio na persistencia
+            Persistence.shared.createAudio(audio)
 //            
 //            print(Persistence.shared.getAllAudio())
+//
+            //aqui crio a consultation com o audio criado
+            let c = ConsultationModel(id: UUID(), title: "audioTeste", date: Date(), audio: Persistence.shared.getAudio(by: audio.id), transcription: nil)
+            //crio/salvo ele na persistencia
+            Persistence.shared.createConsultation(c)
+            //
+            
 //            Agora deve salvar o id do audio e passar para o lugar onde for criar a consultation com o titulo dela
             
             guard let audioURL = audioURL else {

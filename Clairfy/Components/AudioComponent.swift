@@ -7,6 +7,10 @@
 
 import UIKit
 
+enum PlayButtonState {
+    case play
+    case pause
+}
 class AudioComponent: UIView {
 
     // MARK: - UI Components
@@ -68,7 +72,7 @@ class AudioComponent: UIView {
         return button
     }()
 
-    private lazy var playButtonView: UIView = {
+     lazy var playButtonView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .systemBlue
@@ -210,6 +214,13 @@ class AudioComponent: UIView {
         set { audioDurationLabel.textColor = newValue }
     }
 
+    var audioPath: String? {
+        didSet {
+            // Aqui você pode configurar qualquer lógica adicional, como tocar o áudio automaticamente
+            print("Caminho do áudio definido: \(audioPath ?? "sem caminho")")
+        }
+    }
+    
     var playButtonColor: UIColor? {
         get { playButtonView.backgroundColor }
         set { playButtonView.backgroundColor = newValue }

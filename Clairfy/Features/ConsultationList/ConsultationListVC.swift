@@ -86,6 +86,7 @@ class ConsultationListVC: UIViewController {
         super.viewDidLoad()
         setup()
         additionalSetup()
+        Persistence.shared.testeAPI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -142,7 +143,18 @@ extension ConsultationListVC: ViewCodeProtocol {
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        
+        let selectedConsultation = getConsultation(by: indexPath)
+        
+        // Inicializa sua próxima tela
+        let analysisVC = AnalysisViewController()
+        
+        // Se quiser passar dados para ela, faça aqui:
+        analysisVC.consultation = selectedConsultation
+        
+        navigationController?.pushViewController(analysisVC, animated: true)
     }
+
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, complete in
