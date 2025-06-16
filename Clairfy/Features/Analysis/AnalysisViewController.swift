@@ -117,7 +117,7 @@ class AnalysisViewController: UIViewController {
     private var isPlaying = false
     private let scrollView = UIScrollView()
     private let contentView = UIView()
-    
+
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
