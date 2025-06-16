@@ -119,7 +119,9 @@ class AnalysisViewController: UIViewController {
         return button
     }()
     
-    // MARK: "main"
+    private lazy var loader = LoaderView()
+    
+    // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .secondarySystemBackground
