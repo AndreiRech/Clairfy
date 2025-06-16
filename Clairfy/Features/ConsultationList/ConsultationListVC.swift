@@ -1,4 +1,5 @@
 import UIKit
+import AVFAudio
 
 class ConsultationListVC: UIViewController {
     // MARK: Subviews
@@ -67,6 +68,7 @@ class ConsultationListVC: UIViewController {
         button.layer.borderWidth = 3
         
         button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+        
 
         return button
     }()
@@ -114,6 +116,33 @@ class ConsultationListVC: UIViewController {
     func getConsultation(by indexPath: IndexPath) -> ConsultationModel {
         return rows[indexPath.row]
     }
+    
+    func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
+        AVAudioApplication.requestRecordPermission { granted in
+            DispatchQueue.main.async {
+                completion(granted)
+            }
+        }
+    }
+    
+    private func showMicrophoneAccessAlert() {
+        let alert = UIAlertController(
+            title: "Permissão Necessária",
+            message: "Este app precisa de acesso ao microfone para gravar áudio. Vá em Ajustes > Privacidade > Microfone e ative o acesso.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Abrir Ajustes", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString),
+               UIApplication.shared.canOpenURL(settingsURL) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+
+        self.present(alert, animated: true, completion: nil)
+    }
+    
 }
 
 extension ConsultationListVC: ViewCodeProtocol {
@@ -212,6 +241,17 @@ extension ConsultationListVC {
     }
     
     @objc func buttonTapped() {
+        
+        requestMicrophonePermission { [weak self] granted in
+            guard granted else {
+                self?.showMicrophoneAccessAlert()
+                return
+            }
+            
+//            self?.startRecording()
+        }
+
+        
         let viewController = VoiceRecordingViewController()
         navigationController?.pushViewController(viewController, animated: true)
         navigationController?.isNavigationBarHidden = false
