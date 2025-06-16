@@ -257,33 +257,4 @@ final class Persistence: PersistenceProtocol {
             }
         }
     }
-    
-    private var mockData: [ConsultationModel] = [
-        ConsultationModel(id: UUID(), title: "Consulta com Dr. House", date: Date(), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Psicoterapia com Dra. Ana", date: Date().addingTimeInterval(-86400), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil),
-        ConsultationModel(id: UUID(), title: "Retorno Clínico", date: Date().addingTimeInterval(-172800), audio: nil, transcription: nil)
-    ]
-        
-    func getAllConsultationsMock() -> [ConsultationModel] {
-        return mockData
-    }
-        
-    func deleteConsultationMock(by id: UUID) -> Bool {
-        if let index = mockData.firstIndex(where: { $0.id == id }) {
-            mockData.remove(at: index)
-            return true
-        }
-        return false
-    }
 }

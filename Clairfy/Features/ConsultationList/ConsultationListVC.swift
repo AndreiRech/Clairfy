@@ -81,7 +81,7 @@ class ConsultationListVC: UIViewController {
         }
     }
     
-    var consultationID: UUID?
+    var consultation: ConsultationModel?
     
     var rows: [ConsultationModel] = []
 
@@ -149,7 +149,7 @@ class ConsultationListVC: UIViewController {
 
     private func changeScreen() {
         let viewController = AnalysisViewController()
-        viewController.consultationID = consultationID
+        viewController.consultation = consultation
         navigationController?.pushViewController(viewController, animated: true)
         navigationController?.isNavigationBarHidden = false
     }
@@ -181,12 +181,13 @@ extension ConsultationListVC: ViewCodeProtocol {
 
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.consultationID = self.getConsultation(by: indexPath).id
+        self.consultation = self.getConsultation(by: indexPath)
         
         changeScreen()
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
+
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, complete in

@@ -7,6 +7,10 @@
 
 import UIKit
 
+enum PlayButtonState {
+    case play
+    case pause
+}
 class AudioComponent: UIView {
 
     // MARK: - UI Components
@@ -68,7 +72,7 @@ class AudioComponent: UIView {
         return button
     }()
 
-    private lazy var playButtonView: UIView = {
+     lazy var playButtonView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .systemBlue
@@ -210,6 +214,13 @@ class AudioComponent: UIView {
         set { audioDurationLabel.textColor = newValue }
     }
 
+    var audioPath: String? {
+        didSet {
+            // Aqui você pode configurar qualquer lógica adicional, como tocar o áudio automaticamente
+            print("Caminho do áudio definido: \(audioPath ?? "sem caminho")")
+        }
+    }
+    
     var playButtonColor: UIColor? {
         get { playButtonView.backgroundColor }
         set { playButtonView.backgroundColor = newValue }
@@ -239,6 +250,12 @@ class AudioComponent: UIView {
         get { shareImageView.tintColor }
         set { shareImageView.tintColor = newValue }
     }
+    
+    var playButtonState: PlayButtonState = .play {
+                didSet {
+                    updatePlayButtonIcon()
+                }
+            }
 
     var playButtonIconWeight: UIImage.SymbolWeight = .medium {
         didSet {
@@ -277,6 +294,20 @@ class AudioComponent: UIView {
             button.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchDragExit, .touchCancel])
         }
     }
+    
+    private func updatePlayButtonIcon() {
+            let systemName: String
+            switch playButtonState {
+            case .play:
+                systemName = "play.fill"
+            case .pause:
+                systemName = "pause.fill"
+            }
+            
+            let config = UIImage.SymbolConfiguration(weight: playButtonIconWeight)
+            playImageView.image = UIImage(systemName: systemName, withConfiguration: config)
+        }
+
 
     @objc private func buttonTouchDown(_ sender: UIButton) {
         // Feedback tátil leve ao tocar

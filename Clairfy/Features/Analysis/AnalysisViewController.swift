@@ -4,7 +4,7 @@
 //
 //  Created by Bernardo Garcia Fensterseifer on 12/06/25.
 //
-
+import AVFoundation
 import UIKit
 
 class AnalysisViewController: UIViewController {
@@ -31,7 +31,6 @@ class AnalysisViewController: UIViewController {
         let textComponent = TextComponent()
         textComponent.translatesAutoresizingMaskIntoConstraints = false
         textComponent.title = "Resumo Clínico"
-        textComponent.text = "Paciente Ana Paula, 37 anos, em acompanhamento de hipotireoidismo autoimune. Refere cansaço persistente, ganho de peso (5kg), constipação, sono não reparador e episódios esporádicos de ansiedade. Adere bem à levotiroxina 100mcg. Exame físico normal exceto palpação tireoidiana irregular. Solicitados exames hormonais e vitamínicos."
 
         // Configuração do botão Editar
         textComponent.editButtonText = "Editar"
@@ -66,6 +65,9 @@ class AnalysisViewController: UIViewController {
             component.title = "Audio"
             component.date = "10/06/2024 - 21:00"
             component.duration = "00:48:14"
+        
+            //caminho
+            component.audioPath = consultation?.audio?.audioPath
             
             // Configurar cores dos textos
             component.titleColor = .label
@@ -83,9 +85,10 @@ class AnalysisViewController: UIViewController {
             component.shareButtonIconColor = .tertiarySystemBackground
             
             // Configurar grossura dos ícones (opções: .ultraLight, .thin, .light, .regular, .medium, .semibold, .bold, .heavy, .black)
-            component.playButtonIconWeight = .bold
+//            component.playButtonIconWeight = .bold
             component.trashButtonIconWeight = .bold
             component.shareButtonIconWeight = .bold
+    
             
             // Configurar ações dos botões
             component.playButton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
@@ -94,66 +97,205 @@ class AnalysisViewController: UIViewController {
             
             return component
         }()
+
+    private lazy var buttonTeste: UIButton = {
+        var button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(gerarAnalise), for: .touchUpInside)
+        button.setTitle( "Gerar Análise", for: .normal)
+        button.titleLabel?.font = UIFont(name: "SFProRounded-Semibold", size: 17)
+        button.backgroundColor = .systemBlue
+        button.layer.cornerRadius = 12
+        return button
+    }()
     
     private lazy var loader = LoaderView()
     
+    // MARK: Proprieties
+    var consultation: ConsultationModel?
+    private var audioPlayer: AVAudioPlayer?
+    private var isPlaying = false
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupViews()
-        view.backgroundColor = .secondarySystemBackground
+        setup()
+        additionalSetup()
     }
     
-    // MARK: Proprieties
-    var consultationID: UUID?
-    
     // MARK: Functions
-    
+    @objc func gerarAnalise() {
+        guard let audioPath = consultation?.audio?.audioPath else {
+            print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")
+            return
+        }
+
+        let originalURL = URL(fileURLWithPath: audioPath)
+        let fileManager = FileManager.default
+        let documentsDir = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let destinationURL = documentsDir.appendingPathComponent("audioTranscricao.m4a")
+
+        do {
+            if !fileManager.fileExists(atPath: destinationURL.path) {
+                try fileManager.copyItem(at: originalURL, to: destinationURL)
+                print("📥 Áudio copiado para: \(destinationURL.path)")
+            } else {
+                print("✅ Áudio já estava em Documents: \(destinationURL.path)")
+            }
+        } catch {
+            print("❌ Erro ao copiar o áudio:", error.localizedDescription)
+            return
+        }
+
+        let api = APIchatGPT()
+        print("🎙️ Iniciando transcrição...")
+        api.transcreverAudio(audioFileURL: destinationURL) { [weak self] transcricao in
+            guard let self = self, let transcricao = transcricao, !transcricao.isEmpty else {
+                print("❌ Transcrição vazia ou nula.")
+                return
+            }
+
+            print("📝 Transcrição recebida:")
+            print(transcricao)
+
+            let transcricaoModel = TranscriptionModel(
+                id: UUID(),
+                transcription: transcricao,
+                summary: "",
+                didctarized: "",
+                keyWords: [],
+                actionPoints: []
+            )
+
+            DispatchQueue.main.async {
+                self.consultation = ConsultationModel(
+                    id: self.consultation?.id ?? UUID(),
+                    title: self.consultation?.title ?? "Consulta",
+                    date: self.consultation?.date ?? Date(),
+                    audio: self.consultation?.audio,
+                    transcription: transcricaoModel
+                )
+            }
+
+            print("💬 Enviando para resumo...")
+            api.resumirTexto(transcricao) { resumo in
+                guard let resumo = resumo else {
+                    print("❌ Falha ao gerar resumo.")
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    self.artificialInteligenceSummary.text = resumo
+                    print("✅ Resumo exibido na interface.")
+                }
+            }
+        }
+    }
+
+    func additionalSetup() {
+        view.backgroundColor = .secondarySystemBackground
+        
+        // Garante que o título seja exibido corretamente e evite comportamento estranho
+        navigationItem.title = "Análise"
+        navigationController?.navigationBar.prefersLargeTitles = false
+
+        // Teste: printa o caminho do áudio se existir
+        if let audioPath = consultation?.audio?.audioPath {
+            print("Áudio da consulta: \(audioPath)")
+        }
+    }
 }
 
 // MARK: addViews & setConstraints
 extension AnalysisViewController: ViewCodeProtocol {
-    
     func addSubViews() {
-        view.addSubview(titleLabel)
-        view.addSubview(segmentedControl)
-        view.addSubview(artificialInteligenceSummary)
-        view.addSubview(audioComponent    }
+            view.addSubview(scrollView)
+            scrollView.addSubview(contentView)
+
+            contentView.addSubview(titleLabel)
+            contentView.addSubview(segmentedControl)
+            contentView.addSubview(artificialInteligenceSummary)
+            contentView.addSubview(audioComponent)
+            contentView.addSubview(buttonTeste)
+        
+    }
 
     func setupConstraints() {
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
-            
-            /// titleLabel constraints
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            
-            /// segmentedControl constraints
-            segmentedControl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            /// audioComponent constraints
-            audioComponent.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 20),
-            audioComponent.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            audioComponent.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            
-            /// artificialInteligenceSummary constraints
-            artificialInteligenceSummary.topAnchor.constraint(equalTo: audioComponent.bottomAnchor, constant: 20),
-            artificialInteligenceSummary.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            artificialInteligenceSummary.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
-            
+            // ScrollView preenchendo a tela
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            // ContentView dentro da scrollView
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+
+            // ContentView deve ter a mesma largura da scrollView
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
         ])
-    }
-    
-    func setupViews() {
-        addSubViews()
-        setupConstraints()
+
+        // Constraints dos componentes internos
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 20),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+
+            segmentedControl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            segmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            segmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            audioComponent.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 20),
+            audioComponent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            audioComponent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            artificialInteligenceSummary.topAnchor.constraint(equalTo: audioComponent.bottomAnchor, constant: 20),
+            artificialInteligenceSummary.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            artificialInteligenceSummary.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            buttonTeste.topAnchor.constraint(equalTo: artificialInteligenceSummary.bottomAnchor, constant: 20),
+            buttonTeste.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            buttonTeste.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            buttonTeste.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32) // Importante para dar fim ao scroll
+        ])
     }
 }
 
 // MARK: button functions
 extension AnalysisViewController {
+    enum PlayButtonState {
+        case play
+        case pause
+    }
     
+    private func updatePlayIcon(to state: PlayButtonState) {
+        let iconName: String
+        
+        switch state {
+        case .play:
+            iconName = "play.fill"
+            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+            let image = UIImage(systemName: iconName, withConfiguration: config)
+            audioComponent.playButtonIconColor = .tertiarySystemBackground
+            audioComponent.playButtonView.backgroundColor = .clairBlue
+            audioComponent.playButton.setImage(image, for: .normal)
+        case .pause:
+            iconName = "pause.fill"
+            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+            let image = UIImage(systemName: iconName, withConfiguration: config)
+            audioComponent.playButtonIconColor = .tertiarySystemBackground
+            audioComponent.playButtonView.backgroundColor = .clairBlue
+            audioComponent.playButton.setImage(image, for: .normal)
+            audioComponent.playButton.tintColor = .tertiarySystemBackground
+        }
+    }
     /// linkar botões com suas ações
     private func setupButtonActions() {
         
@@ -176,7 +318,43 @@ extension AnalysisViewController {
     }
     
     @objc private func playButtonTapped() {
-        print("Play button tapped")
+        // Se o player já existe, alterna entre play/pause
+        if let player = audioPlayer {
+            if player.isPlaying {
+                player.pause()
+                audioComponent.playButtonState = .play
+                print("⏸ Áudio pausado")
+            } else {
+                player.play()
+                audioComponent.playButtonState = .pause
+                print("▶️ Áudio retomado")
+            }
+            return
+        }
+
+        // Caso o player ainda não tenha sido criado (primeira vez)
+        guard let path = consultation?.audio?.audioPath else {
+            print("❌ Caminho do áudio não definido")
+            return
+        }
+
+        let url = URL(fileURLWithPath: path)
+
+        if !FileManager.default.fileExists(atPath: url.path) {
+            print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
+            return
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.delegate = self  // Adiciona o delegate
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+            audioComponent.playButtonState = .pause
+            print("🎵 Tocando áudio: \(url.path)")
+        } catch {
+            print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
+        }
     }
 
     @objc private func trashButtonTapped() {
@@ -187,4 +365,12 @@ extension AnalysisViewController {
         print("Share button tapped")
     }
     
+}
+
+extension AnalysisViewController: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        audioComponent.playButtonState = .play
+        isPlaying = false
+        print("✅ Áudio terminou de tocar")
+    }
 }
