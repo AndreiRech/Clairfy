@@ -40,7 +40,7 @@ class AnalysisViewController: UIViewController {
         let textComponent = TextComponent()
         textComponent.translatesAutoresizingMaskIntoConstraints = false
         textComponent.title = "Resumo Clínico"
-        textComponent.text = "Paciente Ana Paula, 37 anos, em acompanhamento de hipotireoidismo autoimune. Refere cansaço persistente, ganho de peso (5kg), constipação, sono não reparador e episódios esporádicos de ansiedade. Adere bem à levotiroxina 100mcg. Exame físico normal exceto palpação tireoidiana irregular. Solicitados exames hormonais e vitamínicos."
+//        textComponent.text = "Paciente Ana Paula, 37 anos, em acompanhamento de hipotireoidismo autoimune. Refere cansaço persistente, ganho de peso (5kg), constipação, sono não reparador e episódios esporádicos de ansiedade. Adere bem à levotiroxina 100mcg. Exame físico normal exceto palpação tireoidiana irregular. Solicitados exames hormonais e vitamínicos."
 
         // Configuração do botão Editar
         textComponent.editButtonText = "Editar"
@@ -95,7 +95,7 @@ class AnalysisViewController: UIViewController {
             component.shareButtonIconColor = .tertiarySystemBackground
             
             // Configurar grossura dos ícones (opções: .ultraLight, .thin, .light, .regular, .medium, .semibold, .bold, .heavy, .black)
-            component.playButtonIconWeight = .bold
+//            component.playButtonIconWeight = .bold
             component.trashButtonIconWeight = .bold
             component.shareButtonIconWeight = .bold
     
@@ -214,11 +214,6 @@ class AnalysisViewController: UIViewController {
 extension AnalysisViewController: ViewCodeProtocol {
     
     func addSubViews() {
-//        view.addSubview(titleLabel)
-//        view.addSubview(segmentedControl)
-//        view.addSubview(artificialInteligenceSummary)
-//        view.addSubview(audioComponent)
-//        view.addSubview(buttonTeste)
             view.addSubview(scrollView)
             scrollView.addSubview(contentView)
 
@@ -291,21 +286,38 @@ extension AnalysisViewController {
     
     private func updatePlayIcon(to state: PlayButtonState) {
         let iconName: String
+        
+        print(state)
         switch state {
         case .play:
             iconName = "play.fill"
+            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+            let image = UIImage(systemName: iconName, withConfiguration: config)
+            audioComponent.playButtonIconColor = .tertiarySystemBackground
+            audioComponent.playButtonView.backgroundColor = .clairBlue
+            audioComponent.playButton.setImage(image, for: .normal)
+            //audioComponent.playButton.tintColor = .tertiarySystemBackground
+
         case .pause:
+            
             iconName = "pause.fill"
+            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+            let image = UIImage(systemName: iconName, withConfiguration: config)
+            audioComponent.playButtonIconColor = .tertiarySystemBackground
+            audioComponent.playButtonView.backgroundColor = .clairBlue
+            audioComponent.playButton.setImage(image, for: .normal)
+            audioComponent.playButton.tintColor = .tertiarySystemBackground
         }
 
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
-        let image = UIImage(systemName: iconName, withConfiguration: config)
+//        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+//        let image = UIImage(systemName: iconName, withConfiguration: config)
 
         // Atualiza o ícone na célula
-        audioComponent.playButtonIconColor = .white
-        audioComponent.playButtonView.backgroundColor = .clairBlue
-        audioComponent.playButton.setImage(image, for: .normal)
-        audioComponent.playButton.tintColor = .labelBasic
+//        audioComponent.playButtonIconColor = .tertiarySystemBackground
+//        audioComponent.playButtonView.backgroundColor = .clairBlue
+//        audioComponent.playButton.setImage(image, for: .normal)
+//        audioComponent.playButton.tintColor = .tertiarySystemBackground
+        
     }
     /// linkar botões com suas ações
     private func setupButtonActions() {
