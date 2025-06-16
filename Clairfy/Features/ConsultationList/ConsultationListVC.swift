@@ -81,6 +81,8 @@ class ConsultationListVC: UIViewController {
         }
     }
     
+    var consultationID: UUID?
+    
     var rows: [ConsultationModel] = []
 
     // MARK: Initializers
@@ -117,6 +119,7 @@ class ConsultationListVC: UIViewController {
         return rows[indexPath.row]
     }
     
+
     func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
         AVAudioApplication.requestRecordPermission { granted in
             DispatchQueue.main.async {
@@ -143,6 +146,14 @@ class ConsultationListVC: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
+
+    private func changeScreen() {
+        let viewController = AnalysisViewController()
+        viewController.consultationID = consultationID
+        navigationController?.pushViewController(viewController, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
 }
 
 extension ConsultationListVC: ViewCodeProtocol {
@@ -170,6 +181,10 @@ extension ConsultationListVC: ViewCodeProtocol {
 
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.consultationID = self.getConsultation(by: indexPath).id
+        
+        changeScreen()
+        
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -218,6 +233,7 @@ extension ConsultationListVC: UITableViewDataSource {
             
             if rows.count == 1 {
                 cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner, .layerMaxXMinYCorner]
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
             }
         } else if indexPath.row == rows.count - 1 {
             cell.layer.cornerRadius = 16

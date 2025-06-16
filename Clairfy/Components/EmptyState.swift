@@ -8,7 +8,7 @@
 import UIKit
 
 class EmptyState: UIView {
-    
+    // MARK: Subviews
     private lazy var imageView: UIImageView = {
         var imageView = UIImageView()
         imageView.image = UIImage(systemName: "microphone.fill")
@@ -49,6 +49,7 @@ class EmptyState: UIView {
         return stack
     }()
     
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -57,15 +58,9 @@ class EmptyState: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }
 
 extension EmptyState: ViewCodeProtocol {
-    func setup() {
-        addSubViews()
-        setupConstraints()
-    }
-    
     func addSubViews() {
         addSubview(imageView)
         addSubview(stack)
@@ -85,6 +80,4 @@ extension EmptyState: ViewCodeProtocol {
             
         ])
     }
-    
-    
 }

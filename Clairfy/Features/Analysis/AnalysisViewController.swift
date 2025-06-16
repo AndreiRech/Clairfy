@@ -8,8 +8,7 @@
 import UIKit
 
 class AnalysisViewController: UIViewController {
-    
-    // MARK: components & variables
+    // MARK: Subviews
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -96,14 +95,19 @@ class AnalysisViewController: UIViewController {
             return component
         }()
     
-    // MARK: "main"
+    private lazy var loader = LoaderView()
+    
+    // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
         view.backgroundColor = .secondarySystemBackground
     }
     
-    // MARK: functions
+    // MARK: Proprieties
+    var consultationID: UUID?
+    
+    // MARK: Functions
     
 }
 
@@ -114,8 +118,7 @@ extension AnalysisViewController: ViewCodeProtocol {
         view.addSubview(titleLabel)
         view.addSubview(segmentedControl)
         view.addSubview(artificialInteligenceSummary)
-        view.addSubview(audioComponent)
-    }
+        view.addSubview(audioComponent    }
 
     func setupConstraints() {
         NSLayoutConstraint.activate([
