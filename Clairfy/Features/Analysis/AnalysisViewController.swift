@@ -140,7 +140,7 @@ class AnalysisViewController: UIViewController {
     // MARK: functions
     @objc func gerarAnalise() {
         guard let audioPath = consultation?.audio?.audioPath else {
-            print("❌ Caminho do áudio não encontrado.")
+            print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")
             return
         }
 
@@ -356,12 +356,19 @@ extension AnalysisViewController {
                 }
 
                 // Caso o player ainda não tenha sido criado (primeira vez)
-                guard let path = audioComponent.audioPath else {
-                    print("Caminho de áudio não definido")
-                    return
-                }
+        guard let path = consultation?.audio?.audioPath else {
+            print("❌ Caminho do áudio não definido")
+            return
+        }
 
-                let url = URL(fileURLWithPath: path)
+        let url = URL(fileURLWithPath: path)
+    
+        
+//        print("🔍 pathString: \(pathString)")
+//        print("📁 url.path: \(url.path)")
+
+
+
 
                 if !FileManager.default.fileExists(atPath: url.path) {
                     print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")

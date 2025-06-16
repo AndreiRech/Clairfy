@@ -84,6 +84,8 @@ class RenameViewController: UIViewController {
         let date = formatDate()
         
         let audio = Persistence.shared.getAudio(by: audioID)
+        print(audio?.audioPath)
+        
         let consultation = ConsultationModel(id: UUID(), title: textField.text ?? "Audio - \(date.formatDate())", date: date, audio: audio, transcription: nil)
         
         Persistence.shared.createConsultation(consultation)

@@ -341,7 +341,8 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
             print("Audio Salvo com o nome: \(String(describing: audioURL))")
             
-            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
+            let audio = AudioFileModel(id: UUID(), audioPath: audioURL!.path)
+
             audioID = audio.id
             
             Persistence.shared.createAudio(audio)
