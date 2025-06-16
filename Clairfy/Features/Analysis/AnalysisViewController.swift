@@ -341,46 +341,46 @@ extension AnalysisViewController {
     }
     
     @objc private func playButtonTapped() {
-            // Se o player já existe, alterna entre play/pause
-            if let player = audioPlayer {
-                if player.isPlaying {
-                    player.pause()
-                    isPlaying = false
-                    updatePlayIcon(to: .play)
-                    print("⏸ Áudio pausado")
-                } else {
-                    player.play()
-                    isPlaying = true
-                    updatePlayIcon(to: .pause)
-                    print("▶️ Áudio retomado")
+                // Se o player já existe, alterna entre play/pause
+                if let player = audioPlayer {
+                    if player.isPlaying {
+                        player.pause()
+                        audioComponent.playButtonState = .play
+                        print("⏸ Áudio pausado")
+                    } else {
+                        player.play()
+                        audioComponent.playButtonState = .pause
+                        print("▶️ Áudio retomado")
+                    }
+                    return
                 }
-                return
+
+                // Caso o player ainda não tenha sido criado (primeira vez)
+                guard let path = audioComponent.audioPath else {
+                    print("Caminho de áudio não definido")
+                    return
+                }
+
+                let url = URL(fileURLWithPath: path)
+
+                if !FileManager.default.fileExists(atPath: url.path) {
+                    print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
+                    return
+                }
+
+                do {
+                    audioPlayer = try AVAudioPlayer(contentsOf: url)
+                    audioPlayer?.delegate = self  // Adiciona o delegate
+                    audioPlayer?.prepareToPlay()
+                    audioPlayer?.play()
+                    audioComponent.playButtonState = .pause
+                    print("🎵 Tocando áudio: \(url.path)")
+                } catch {
+                    print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
+                }
             }
 
-            // Caso o player ainda não tenha sido criado (primeira vez)
-            guard let path = audioComponent.audioPath else {
-                print("Caminho de áudio não definido")
-                return
-            }
 
-            let url = URL(fileURLWithPath: path)
-
-            if !FileManager.default.fileExists(atPath: url.path) {
-                print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
-                return
-            }
-
-            do {
-                audioPlayer = try AVAudioPlayer(contentsOf: url)
-                audioPlayer?.prepareToPlay()
-                audioPlayer?.play()
-                isPlaying = true
-                updatePlayIcon(to: .pause)
-                print("🎵 Tocando áudio: \(url.path)")
-            } catch {
-                print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
-            }
-        }
 
 
     @objc private func trashButtonTapped() {
@@ -391,4 +391,12 @@ extension AnalysisViewController {
         print("Share button tapped")
     }
     
+}
+
+extension AnalysisViewController: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        audioComponent.playButtonState = .play
+        isPlaying = false
+        print("✅ Áudio terminou de tocar")
+    }
 }
