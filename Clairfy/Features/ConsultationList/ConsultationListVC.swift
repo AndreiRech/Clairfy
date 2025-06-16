@@ -179,13 +179,17 @@ extension ConsultationListVC: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CustomCell.identifier, for: indexPath) as? CustomCell else {
             return UITableViewCell()
         }
-            
-        cell.configure(titleText: consultation.title, timerText: consultation.date.description)
+        
+        cell.configure(titleText: consultation.title, timerText: consultation.date.formatDate())
         cell.backgroundColor = .tertiarySystemBackground
         
         if indexPath.row == 0 {
             cell.layer.cornerRadius = 16
             cell.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            
+            if rows.count == 1 {
+                cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner, .layerMaxXMinYCorner]
+            }
         } else if indexPath.row == rows.count - 1 {
             cell.layer.cornerRadius = 16
             cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner]
