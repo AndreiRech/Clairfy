@@ -154,30 +154,50 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     
     // MARK: - functions
     private func startRecording() {
-            recordingState = .recording
+        createURL()
+        
+        recordingState = .recording
+        
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 16000,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
             
-            // Atualiza o ícone do botão
-            updateRecordButtonIcon()
-            
-            timer = Timer.scheduledTimer(
-                timeInterval: 0.01,
-                target: self,
-                selector: #selector(updateTimer),
-                userInfo: nil,
-                repeats: true
-            )
-            startRecordingAnimation()
+        do {
+            guard let audioURL else { return }
+            audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
+            audioRecorder?.delegate = self
+            audioRecorder?.record()
+        } catch {
+            print("erro")
         }
+            
+        // Atualiza o ícone do botão
+        updateRecordButtonIcon()
+            
+        timer = Timer.scheduledTimer(
+            timeInterval: 0.01,
+            target: self,
+            selector: #selector(updateTimer),
+            userInfo: nil,
+            repeats: true
+        )
+        startRecordingAnimation()
+    }
         
     private func pauseRecording() {
-            recordingState = .paused
-            updateRecordButtonIcon()
-            timer?.invalidate()
-            timer = nil
-            stopRecordingAnimation()
-        }
+        recordingState = .paused
+        updateRecordButtonIcon()
+        
+        timer?.invalidate()
+        timer = nil
+        stopRecordingAnimation()
+    }
         
     private func stopRecording() {
+            audioRecorder?.pause()
             recordingState = .stopped
             timer?.invalidate()
             timer = nil
@@ -246,7 +266,9 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             preferredStyle: .alert
         )
         
-        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel)
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel) { [weak self] _ in
+            self?.audioRecorder?.record()
+        }
         let startAction = UIAlertAction(title: "Iniciar Gravação", style: .default) { [weak self] _ in
             self?.resetRecording() // Zera o timer antes de começar
             self?.startRecording()
@@ -328,10 +350,8 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true)
     }
-        
-    /// Função reservada para implementação futura do salvamento do áudio
-    private func saveAudioRecording() {
-        
+    
+    private func createURL() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
@@ -340,31 +360,21 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
             print("Audio Salvo com o nome: \(String(describing: audioURL))")
-            
-            let audio = AudioFileModel(id: UUID(), audioPath: audioURL!.path)
-
-            audioID = audio.id
-            
-            Persistence.shared.createAudio(audio)
-            
-            guard let audioURL = audioURL else {
-                print("Erro ao criar URL para o áudio.")
-                return
-            }
-            
-            let settings: [String: Any] = [
-                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                AVSampleRateKey: 16000,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-            ]
-            
-            audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.record()
         } catch {
             print("Erro ao iniciar gravação: \(error.localizedDescription)")
         }
+    }
+        
+    /// Função reservada para implementação futura do salvamento do áudio
+    private func saveAudioRecording() {
+        guard let audioURL = audioURL else {
+            print("Erro ao criar URL para o áudio.")
+            return
+        }
+        let audio = AudioFileModel(id: UUID(), audioPath: audioURL.path)
+        audioID = audio.id
+            
+        Persistence.shared.createAudio(audio)
     }
     
     ///whatafuck
@@ -492,10 +502,24 @@ extension VoiceRecordingViewController {
        
     @objc private func recordButtonTapped() {
            switch recordingState {
-           case .stopped, .paused:
+           case .stopped:
                startRecording()
+               audioRecorder?.record()
+           case .paused:
+               audioRecorder?.record()
+               updateRecordButtonIcon()
+               
+               timer = Timer.scheduledTimer(
+                   timeInterval: 0.01,
+                   target: self,
+                   selector: #selector(updateTimer),
+                   userInfo: nil,
+                   repeats: true
+               )
+               startRecordingAnimation()
            case .recording:
                pauseRecording()
+               audioRecorder?.pause()
            }
        }
 }

@@ -81,7 +81,7 @@ class ConsultationListVC: UIViewController {
         }
     }
     
-    var consultationID: UUID?
+    var consultation: ConsultationModel?
     
     var rows: [ConsultationModel] = []
 
@@ -90,7 +90,6 @@ class ConsultationListVC: UIViewController {
         super.viewDidLoad()
         setup()
         additionalSetup()
-        Persistence.shared.testeAPI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -150,7 +149,7 @@ class ConsultationListVC: UIViewController {
 
     private func changeScreen() {
         let viewController = AnalysisViewController()
-        //viewController.consultationID = consultationID
+        viewController.consultation = consultation
         navigationController?.pushViewController(viewController, animated: true)
         navigationController?.isNavigationBarHidden = false
     }
@@ -182,21 +181,11 @@ extension ConsultationListVC: ViewCodeProtocol {
 
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.consultationID = self.getConsultation(by: indexPath).id
+        self.consultation = self.getConsultation(by: indexPath)
         
         changeScreen()
         
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        let selectedConsultation = getConsultation(by: indexPath)
-        
-        // Inicializa sua próxima tela
-        let analysisVC = AnalysisViewController()
-        
-        // Se quiser passar dados para ela, faça aqui:
-        analysisVC.consultation = selectedConsultation
-        
-        navigationController?.pushViewController(analysisVC, animated: true)
     }
 
     

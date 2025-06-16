@@ -8,16 +8,7 @@ import AVFoundation
 import UIKit
 
 class AnalysisViewController: UIViewController {
-    
-    var consultation: ConsultationModel?
-    private var audioPlayer: AVAudioPlayer?
-    private var isPlaying = false
-    private let scrollView = UIScrollView()
-    private let contentView = UIView()
-
-
-    
-    // MARK: components & variables
+    // MARK: Subviews
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -40,7 +31,6 @@ class AnalysisViewController: UIViewController {
         let textComponent = TextComponent()
         textComponent.translatesAutoresizingMaskIntoConstraints = false
         textComponent.title = "Resumo Clínico"
-//        textComponent.text = "Paciente Ana Paula, 37 anos, em acompanhamento de hipotireoidismo autoimune. Refere cansaço persistente, ganho de peso (5kg), constipação, sono não reparador e episódios esporádicos de ansiedade. Adere bem à levotiroxina 100mcg. Exame físico normal exceto palpação tireoidiana irregular. Solicitados exames hormonais e vitamínicos."
 
         // Configuração do botão Editar
         textComponent.editButtonText = "Editar"
@@ -107,7 +97,7 @@ class AnalysisViewController: UIViewController {
             
             return component
         }()
-    //pro teste
+
     private lazy var buttonTeste: UIButton = {
         var button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -121,25 +111,21 @@ class AnalysisViewController: UIViewController {
     
     private lazy var loader = LoaderView()
     
+    // MARK: Proprieties
+    var consultation: ConsultationModel?
+    private var audioPlayer: AVAudioPlayer?
+    private var isPlaying = false
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+    
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .secondarySystemBackground
-        
-        // Garante que o título seja exibido corretamente e evite comportamento estranho
-        navigationItem.title = "Análise"
-        navigationController?.navigationBar.prefersLargeTitles = false
-        
-        setupViews()
-        
-        // Teste: printa o caminho do áudio se existir
-        if let audioPath = consultation?.audio?.audioPath {
-            print("Áudio da consulta: \(audioPath)")
-        }
-      
+        setup()
+        additionalSetup()
     }
     
-    // MARK: functions
+    // MARK: Functions
     @objc func gerarAnalise() {
         guard let audioPath = consultation?.audio?.audioPath else {
             print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")
@@ -208,13 +194,22 @@ class AnalysisViewController: UIViewController {
         }
     }
 
+    func additionalSetup() {
+        view.backgroundColor = .secondarySystemBackground
+        
+        // Garante que o título seja exibido corretamente e evite comportamento estranho
+        navigationItem.title = "Análise"
+        navigationController?.navigationBar.prefersLargeTitles = false
 
-    
+        // Teste: printa o caminho do áudio se existir
+        if let audioPath = consultation?.audio?.audioPath {
+            print("Áudio da consulta: \(audioPath)")
+        }
+    }
 }
 
 // MARK: addViews & setConstraints
 extension AnalysisViewController: ViewCodeProtocol {
-    
     func addSubViews() {
             view.addSubview(scrollView)
             scrollView.addSubview(contentView)
@@ -271,16 +266,10 @@ extension AnalysisViewController: ViewCodeProtocol {
             buttonTeste.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32) // Importante para dar fim ao scroll
         ])
     }
-    
-    func setupViews() {
-        addSubViews()
-        setupConstraints()
-    }
 }
 
 // MARK: button functions
 extension AnalysisViewController {
-    
     enum PlayButtonState {
         case play
         case pause
@@ -289,7 +278,6 @@ extension AnalysisViewController {
     private func updatePlayIcon(to state: PlayButtonState) {
         let iconName: String
         
-        print(state)
         switch state {
         case .play:
             iconName = "play.fill"
@@ -298,10 +286,7 @@ extension AnalysisViewController {
             audioComponent.playButtonIconColor = .tertiarySystemBackground
             audioComponent.playButtonView.backgroundColor = .clairBlue
             audioComponent.playButton.setImage(image, for: .normal)
-            //audioComponent.playButton.tintColor = .tertiarySystemBackground
-
         case .pause:
-            
             iconName = "pause.fill"
             let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
             let image = UIImage(systemName: iconName, withConfiguration: config)
@@ -310,16 +295,6 @@ extension AnalysisViewController {
             audioComponent.playButton.setImage(image, for: .normal)
             audioComponent.playButton.tintColor = .tertiarySystemBackground
         }
-
-//        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-//        let image = UIImage(systemName: iconName, withConfiguration: config)
-
-        // Atualiza o ícone na célula
-//        audioComponent.playButtonIconColor = .tertiarySystemBackground
-//        audioComponent.playButtonView.backgroundColor = .clairBlue
-//        audioComponent.playButton.setImage(image, for: .normal)
-//        audioComponent.playButton.tintColor = .tertiarySystemBackground
-        
     }
     /// linkar botões com suas ações
     private func setupButtonActions() {
@@ -343,54 +318,44 @@ extension AnalysisViewController {
     }
     
     @objc private func playButtonTapped() {
-                // Se o player já existe, alterna entre play/pause
-                if let player = audioPlayer {
-                    if player.isPlaying {
-                        player.pause()
-                        audioComponent.playButtonState = .play
-                        print("⏸ Áudio pausado")
-                    } else {
-                        player.play()
-                        audioComponent.playButtonState = .pause
-                        print("▶️ Áudio retomado")
-                    }
-                    return
-                }
+        // Se o player já existe, alterna entre play/pause
+        if let player = audioPlayer {
+            if player.isPlaying {
+                player.pause()
+                audioComponent.playButtonState = .play
+                print("⏸ Áudio pausado")
+            } else {
+                player.play()
+                audioComponent.playButtonState = .pause
+                print("▶️ Áudio retomado")
+            }
+            return
+        }
 
-                // Caso o player ainda não tenha sido criado (primeira vez)
+        // Caso o player ainda não tenha sido criado (primeira vez)
         guard let path = consultation?.audio?.audioPath else {
             print("❌ Caminho do áudio não definido")
             return
         }
 
         let url = URL(fileURLWithPath: path)
-    
-        
-//        print("🔍 pathString: \(pathString)")
-//        print("📁 url.path: \(url.path)")
 
+        if !FileManager.default.fileExists(atPath: url.path) {
+            print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
+            return
+        }
 
-
-
-                if !FileManager.default.fileExists(atPath: url.path) {
-                    print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
-                    return
-                }
-
-                do {
-                    audioPlayer = try AVAudioPlayer(contentsOf: url)
-                    audioPlayer?.delegate = self  // Adiciona o delegate
-                    audioPlayer?.prepareToPlay()
-                    audioPlayer?.play()
-                    audioComponent.playButtonState = .pause
-                    print("🎵 Tocando áudio: \(url.path)")
-                } catch {
-                    print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
-                }
-            }
-
-
-
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.delegate = self  // Adiciona o delegate
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+            audioComponent.playButtonState = .pause
+            print("🎵 Tocando áudio: \(url.path)")
+        } catch {
+            print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
+        }
+    }
 
     @objc private func trashButtonTapped() {
         print("Trash button tapped")
