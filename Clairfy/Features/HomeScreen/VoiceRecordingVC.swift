@@ -27,6 +27,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     private var audioRecorder: AVAudioRecorder?
     private var audioURL: URL?
     private var recordings: [URL] = []
+    private var audioID: UUID?
 
     lazy var recordingImage: UIImageView = {
         var imageView = UIImageView()
@@ -271,7 +272,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             self?.handleFinishRecording()
         }
         
-        // Define a cor verde para o botão Finalizar
         finishAction.setValue(UIColor.systemGreen, forKey: "titleTextColor")
         
         alert.addAction(cancelAction)
@@ -310,6 +310,23 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             
         // 3. Reseta o timer
         resetRecording()
+        
+        changeScreen()
+    }
+    
+    private func changeScreen() {
+        let renameVC = RenameViewController()
+        renameVC.audioID = self.audioID
+        
+        let navController = UINavigationController(rootViewController: renameVC)
+
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
         
     /// Função reservada para implementação futura do salvamento do áudio
@@ -323,24 +340,16 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             audioURL = documentsPath.appendingPathComponent("audio_\(Date().timeIntervalSince1970).m4a")
             print("Audio Salvo com o nome: \(String(describing: audioURL))")
-            //cria audio
-            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
-            //cria o objeto audio na persistencia
-            Persistence.shared.createAudio(audio)
-//            
-//            print(Persistence.shared.getAllAudio())
-//
-            //aqui crio a consultation com o audio criado
-            let c = ConsultationModel(id: UUID(), title: "audioTeste", date: Date(), audio: Persistence.shared.getAudio(by: audio.id), transcription: nil)
-            //crio/salvo ele na persistencia
-            Persistence.shared.createConsultation(c)
-            //
             
-//            Agora deve salvar o id do audio e passar para o lugar onde for criar a consultation com o titulo dela
+            let audio = AudioFileModel(id: UUID(), audioPath: String(describing: audioURL))
+            audioID = audio.id
+            
+            Persistence.shared.createAudio(audio)
             
             guard let audioURL = audioURL else {
                 print("Erro ao criar URL para o áudio.")
-                return }
+                return
+            }
             
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -352,7 +361,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.record()
-            
         } catch {
             print("Erro ao iniciar gravação: \(error.localizedDescription)")
         }
@@ -478,19 +486,7 @@ extension VoiceRecordingViewController {
     }
        
     @objc private func finishButtonTapped() {
-//        showFinishConfirmationAlert()
-        handleFinishRecording()
-        
-        let renameVC = RenameViewController()
-        let navController = UINavigationController(rootViewController: renameVC)
-
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.medium()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        navController.modalPresentationStyle = .pageSheet
-        present(navController, animated: true)
+        showFinishConfirmationAlert()
     }
        
     @objc private func recordButtonTapped() {

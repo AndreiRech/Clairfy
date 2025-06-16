@@ -57,6 +57,9 @@ class RenameViewController: UIViewController {
         additionalSetup()
     }
     
+    // MARK: Properties
+    var audioID: UUID?
+    
     // MARK: Functions
     func additionalSetup() {
         title = "Novo Áudio"
@@ -66,6 +69,24 @@ class RenameViewController: UIViewController {
         navigationItem.leftBarButtonItem = closeButtonItem
         
         view.backgroundColor = .tertiarySystemBackground
+    }
+    
+    private func formatDate() -> Date {
+        let now = Date()
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: now)
+        return calendar.date(from: components) ?? now
+    }
+    
+    private func createConsultation() {
+        guard let audioID = self.audioID else { return }
+        
+        let date = formatDate()
+        
+        let audio = Persistence.shared.getAudio(by: audioID)
+        let consultation = ConsultationModel(id: UUID(), title: textField.text ?? "Audio - \(date.formatDate())", date: date, audio: audio, transcription: nil)
+        
+        Persistence.shared.createConsultation(consultation)
     }
 }
 
@@ -91,7 +112,8 @@ extension RenameViewController {
     }
     
     @objc func saveButtonTapped() {
-        print(textField.text ?? "")
+        createConsultation()
+        
         dismiss(animated: true) {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                 let window = windowScene.windows.first {
