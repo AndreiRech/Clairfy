@@ -10,7 +10,7 @@ protocol PersistenceProtocol {
     func getAllConsultations() -> [ConsultationModel]
     func getConsultation(by id: UUID) -> ConsultationModel?
     func deleteConsultation(by id: UUID) -> Bool
-    func updateConsultation(_ consultation: ConsultationModel) -> Bool
+    func updateConsultation(_ consultation: ConsultationModel, transcription: TranscriptionModel?, audio: AudioFileModel?) -> Bool
     
     func createTranscription(_ transcription: TranscriptionModel)
     func getAllTranscriptions() -> [TranscriptionModel]

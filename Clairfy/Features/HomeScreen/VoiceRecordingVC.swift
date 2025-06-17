@@ -259,29 +259,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         // como remover o arquivo de áudio se já tiver sido salvo (ver com o Andrei)
     }
     
-    private func showStartConfirmationAlert() {
-        let alert = UIAlertController(
-            title: "Nova Gravação",
-            message: "Deseja iniciar uma nova gravação?",
-            preferredStyle: .alert
-        )
-        
-        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel) { [weak self] _ in
-            self?.audioRecorder?.record()
-        }
-        let startAction = UIAlertAction(title: "Iniciar Gravação", style: .default) { [weak self] _ in
-            self?.resetRecording() // Zera o timer antes de começar
-            self?.startRecording()
-        }
-        
-        startAction.setValue(UIColor.systemGreen, forKey: "titleTextColor")
-        alert.addAction(cancelAction)
-        alert.addAction(startAction)
-        
-        present(alert, animated: true)
-    }
-
-    
     private func showFinishConfirmationAlert() {
         let alert = UIAlertController(
             title: "Finalizar Gravação",
@@ -371,7 +348,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             print("Erro ao criar URL para o áudio.")
             return
         }
-        let audio = AudioFileModel(id: UUID(), audioPath: audioURL.path)
+        let audio = AudioFileModel(id: UUID(), audioPath: audioURL.lastPathComponent)
         audioID = audio.id
             
         Persistence.shared.createAudio(audio)

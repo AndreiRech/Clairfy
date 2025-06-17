@@ -125,7 +125,7 @@ final class Persistence: PersistenceProtocol {
         }
     }
     
-    func updateConsultation(_ consultation: ConsultationModel) -> Bool {
+    func updateConsultation(_ consultation: ConsultationModel, transcription: TranscriptionModel?, audio: AudioFileModel?) -> Bool {
         guard let context else { return false }
         
         do {
@@ -136,7 +136,7 @@ final class Persistence: PersistenceProtocol {
                 existingConsultation.title = consultation.title
                 existingConsultation.date = consultation.date
                     
-                if let transcriptionModel = consultation.transcription {
+                if let transcriptionModel = transcription {
                     existingConsultation.transcription = transcriptionModel.toEntity(in: context)
                 } else {
                     existingConsultation.transcription = nil
