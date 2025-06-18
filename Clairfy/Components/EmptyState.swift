@@ -1,10 +1,3 @@
-//
-//  EmptyState.swift
-//  Clairfy
-//
-//  Created by Eduardo Ferrari on 11/06/25.
-//
-
 import UIKit
 
 class EmptyState: UIView {

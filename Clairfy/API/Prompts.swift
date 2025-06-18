@@ -1,5 +1,5 @@
-class Prompts {
-    let doctor: String = """
+struct Prompts {
+    static let doctor: String = """
         Você é um assistente de documentação clínica. Seu papel é transformar a transcrição integral de uma consulta em um relatório conciso e objetivo para uso profissional, seguindo normas de prontuário eletrônico.
 
         #### Contexto
@@ -38,7 +38,7 @@ class Prompts {
         }
     """
     
-    let patient: String = """
+    static let patient: String = """
         Você é um assistente de entendimento médico para pacientes, especializado
         em traduzir linguagem técnica em informação clara, empática e fácil de
         seguir.
@@ -76,4 +76,12 @@ class Prompts {
           ]
         }
     """
+    
+    static func getPrompt(for type: String) -> String {
+        switch type {
+        case "doctor": return doctor
+        case "patient": return patient
+        default: return ""
+        }
+    }
 }

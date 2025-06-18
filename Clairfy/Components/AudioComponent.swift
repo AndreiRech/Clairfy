@@ -1,19 +1,7 @@
-//
-//  AudioComponent.swift
-//  Clairfy
-//
-//  Created by Bernardo Garcia Fensterseifer on 12/06/25.
-//
-
 import UIKit
 
-enum PlayButtonState {
-    case play
-    case pause
-}
 class AudioComponent: UIView {
-
-    // MARK: - UI Components
+    // MARK: Subviews
     private lazy var backgroundView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -56,7 +44,6 @@ class AudioComponent: UIView {
         return label
     }()
 
-    // MARK: - Buttons
     private lazy var playImageView: UIImageView = {
         let image = UIImageView()
         image.translatesAutoresizingMaskIntoConstraints = false
@@ -72,7 +59,7 @@ class AudioComponent: UIView {
         return button
     }()
 
-     lazy var playButtonView: UIView = {
+    lazy var playButtonView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .systemBlue
@@ -137,7 +124,6 @@ class AudioComponent: UIView {
         return image
     }()
 
-    // MARK: - Stack Views
     private lazy var audioInfoStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [audioTitleLabel, audioDateLabel])
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -183,7 +169,7 @@ class AudioComponent: UIView {
         return stack
     }()
 
-    // MARK: - Public Properties
+    // MARK: Properties
     var title: String? {
         get { audioTitleLabel.text }
         set { audioTitleLabel.text = newValue }
@@ -216,7 +202,6 @@ class AudioComponent: UIView {
 
     var audioPath: String? {
         didSet {
-            // Aqui você pode configurar qualquer lógica adicional, como tocar o áudio automaticamente
             print("Caminho do áudio definido: \(audioPath ?? "sem caminho")")
         }
     }
@@ -252,10 +237,10 @@ class AudioComponent: UIView {
     }
     
     var playButtonState: PlayButtonState = .play {
-                didSet {
-                    updatePlayButtonIcon()
-                }
-            }
+        didSet {
+            updatePlayButtonIcon()
+        }
+    }
 
     var playButtonIconWeight: UIImage.SymbolWeight = .medium {
         didSet {
@@ -275,19 +260,19 @@ class AudioComponent: UIView {
         }
     }
 
-    // MARK: - Initialization
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
-        setupButtonAnimations()
+        additionalSetup()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
 
-    // MARK: - Button Animations
-    private func setupButtonAnimations() {
+    // MARK: Functions
+    private func additionalSetup() {
         let buttons = [playButton, trashButton, shareButton]
         buttons.forEach { button in
             button.addTarget(self, action: #selector(buttonTouchDown(_:)), for: [.touchDown, .touchDragEnter])
@@ -296,59 +281,18 @@ class AudioComponent: UIView {
     }
     
     private func updatePlayButtonIcon() {
-            let systemName: String
-            switch playButtonState {
-            case .play:
-                systemName = "play.fill"
-            case .pause:
-                systemName = "pause.fill"
-            }
-            
-            let config = UIImage.SymbolConfiguration(weight: playButtonIconWeight)
-            playImageView.image = UIImage(systemName: systemName, withConfiguration: config)
+        let systemName: String
+        switch playButtonState {
+        case .play:
+            systemName = "play.fill"
+        case .pause:
+            systemName = "pause.fill"
         }
-
-
-    @objc private func buttonTouchDown(_ sender: UIButton) {
-        // Feedback tátil leve ao tocar
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.prepare()
-        generator.impactOccurred()
-
-        UIView.animate(withDuration: 0.1,
-                       delay: 0,
-                       options: [.curveEaseIn, .allowUserInteraction],
-                       animations: {
-            sender.superview?.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            sender.superview?.alpha = 0.9
-        })
+            
+        let config = UIImage.SymbolConfiguration(weight: playButtonIconWeight)
+        playImageView.image = UIImage(systemName: systemName, withConfiguration: config)
     }
 
-    @objc private func buttonTouchUp(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.5,
-                       delay: 0,
-                       usingSpringWithDamping: 0.4,
-                       initialSpringVelocity: 0.5,
-                       options: [.curveEaseOut, .allowUserInteraction],
-                       animations: {
-            // Efeito de "saltinho" ao liberar
-            sender.superview?.transform = CGAffineTransform(scaleX: 1.02, y: 1.02)
-            sender.superview?.alpha = 1.0
-        }, completion: { _ in
-            // Volta ao tamanho original suavemente
-            UIView.animate(withDuration: 0.3) {
-                sender.superview?.transform = .identity
-            }
-
-            // Feedback tátil adicional ao completar a ação (opcional)
-            if sender.isTouchInside {
-                let generator = UIImpactFeedbackGenerator(style: .soft)
-                generator.impactOccurred()
-            }
-        })
-    }
-
-    // MARK: - Helper Methods
     private func updateIconWeight(imageView: UIImageView, systemName: String, weight: UIImage.SymbolWeight) {
         let config = UIImage.SymbolConfiguration(weight: weight)
         imageView.image = UIImage(systemName: systemName, withConfiguration: config)
@@ -432,5 +376,42 @@ extension AudioComponent: ViewCodeProtocol {
             // Sound wave image
             soundWaveImageView.heightAnchor.constraint(equalToConstant: 40),
         ])
+    }
+}
+
+extension AudioComponent {
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred()
+
+        UIView.animate(withDuration: 0.1,
+                       delay: 0,
+                       options: [.curveEaseIn, .allowUserInteraction],
+                       animations: {
+            sender.superview?.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            sender.superview?.alpha = 0.9
+        })
+    }
+
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.5,
+                       delay: 0,
+                       usingSpringWithDamping: 0.4,
+                       initialSpringVelocity: 0.5,
+                       options: [.curveEaseOut, .allowUserInteraction],
+                       animations: {
+            sender.superview?.transform = CGAffineTransform(scaleX: 1.02, y: 1.02)
+            sender.superview?.alpha = 1.0
+        }, completion: { _ in
+            UIView.animate(withDuration: 0.3) {
+                sender.superview?.transform = .identity
+            }
+
+            if sender.isTouchInside {
+                let generator = UIImpactFeedbackGenerator(style: .soft)
+                generator.impactOccurred()
+            }
+        })
     }
 }
