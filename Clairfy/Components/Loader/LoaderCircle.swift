@@ -4,8 +4,13 @@ class LoaderCircleView: UIView {
     // MARK: Subviews
     private let shapeLayer = CAShapeLayer()
     
+    // MARK: Properties
+    override var intrinsicContentSize: CGSize {
+        return CGSize(width: 37, height: 34)
+    }
+    
     // MARK: Functions
-    private func setup() {
+    private func additionalSetup() {
         shapeLayer.strokeColor = UIColor.clairBlue.cgColor
         shapeLayer.lineWidth = 4
         shapeLayer.fillColor = UIColor.clear.cgColor
@@ -43,14 +48,10 @@ class LoaderCircleView: UIView {
     // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
+        additionalSetup()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    override var intrinsicContentSize: CGSize {
-        return CGSize(width: 37, height: 34)
     }
 }

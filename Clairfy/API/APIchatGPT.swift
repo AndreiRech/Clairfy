@@ -1,9 +1,3 @@
-//
-//  APIchatGPT.swift
-//  Clairfy
-//
-//  Created by Eduardo Ferrari on 14/06/25.
-//
 import Foundation
 
 class APIchatGPT {
@@ -45,8 +39,7 @@ class APIchatGPT {
 
       
     func resumirTexto(_ texto: String, type: String, completion: @escaping (String?) -> Void) {
-        let promptClass = Prompts()
-        let prompt = type == "doctor" ? promptClass.doctor : promptClass.patient
+        let prompt = type == "doctor" ? Prompts.doctor : Prompts.patient
 
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
         request.httpMethod = "POST"
@@ -84,48 +77,4 @@ class APIchatGPT {
             completion(content)
         }.resume()
     }
-
-    func extrairPontosAcao(_ texto: String, completion: @escaping (String?) -> Void) {
-        let prompt = """
-        Me gere os pontos de ação dessa consulta médica. Deixe bem formatado bonitinho
-        """
-
-
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body: [String: Any] = [
-            "model": "gpt-4.1-nano-2025-04-14",
-            "messages": [
-                ["role": "system", "content": prompt],
-                ["role": "user", "content": texto]
-            ],
-            "temperature": 0.1
-        ]
-
-        request.httpBody = try! JSONSerialization.data(withJSONObject: body)
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("❌ Erro ao se comunicar com a API:", error.localizedDescription)
-                completion(nil)
-                return
-            }
-
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let choices = json["choices"] as? [[String: Any]],
-                  let message = choices.first?["message"] as? [String: Any],
-                  let content = message["content"] as? String else {
-                print("❌ Erro ao interpretar resposta da API")
-                completion(nil)
-                return
-            }
-
-            completion(content)
-        }.resume()
-    }
-    
 }

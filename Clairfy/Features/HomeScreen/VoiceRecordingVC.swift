@@ -1,34 +1,20 @@
-//
-//  VoiceRecordingViewController.swift
-//  Clairfy
-//
-//  Created by Bernardo Garcia Fensterseifer on 10/06/25.
-//
-
 import UIKit
 import AVFoundation
 
-private enum RecordingState {
-    case stopped
-    case recording
-    case paused
-}
-
 class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
+    // MARK: Properties
     private var timer: Timer?
     private var elapsedTime: TimeInterval = 0
-    // Substitua a variável isRecording por:
     private var recordingState: RecordingState = .stopped
     var recordingAnimationTimer: Timer?
     let recordingImages = [UIImage(named: "rec1"), UIImage(named: "rec3")]
     var currentImageIndex = 0
-    
-    // MARK: components & variables
     private var audioRecorder: AVAudioRecorder?
     private var audioURL: URL?
     private var recordings: [URL] = []
     private var audioID: UUID?
 
+    // MARK: Subviews
     lazy var recordingImage: UIImageView = {
         var imageView = UIImageView()
         imageView.image = .emptyRec
@@ -36,6 +22,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
+    
     lazy var timerLabel: UILabel = {
         var label = UILabel()
         label.text = "00:00:00"
@@ -44,6 +31,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
     lazy var soundWaveImage: UIImageView = {
         var imageView = UIImageView()
         imageView.image = .soundWave
@@ -51,16 +39,11 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
+    
     lazy var recordButton: UIButton = {
         var button = UIButton()
         button.backgroundColor = .clairBlue
         button.translatesAutoresizingMaskIntoConstraints = false
-
-        /// constraints
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 92),
-            button.heightAnchor.constraint(equalToConstant: 92)
-        ])
 
         /// Força o cálculo do layout
         DispatchQueue.main.async {
@@ -76,6 +59,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
 
         return button
     }()
+    
     lazy var deleteAudioButton: UIButton = {
         var button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -140,10 +124,15 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return stackView
     }()
     
-    // MARK: - "main"
+    // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupViews()
+        setup()
+        additionalSetup()
+    }
+    
+    // MARK: Functions
+    private func additionalSetup() {
         view.backgroundColor = .secondarySystemBackground
         setupButtonActions()
         updateTimerLabel()
@@ -152,7 +141,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         navigationController?.navigationBar.prefersLargeTitles = false
     }
     
-    // MARK: - functions
     private func startRecording() {
         createURL()
         
@@ -232,11 +220,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             }
         }
         
-    @objc private func updateTimer() {
-        elapsedTime += 0.01
-        updateTimerLabel()
-    }
-        
     private func updateTimerLabel() {
         let hours = Int(elapsedTime) / 3600
         let minutes = (Int(elapsedTime) % 3600) / 60
@@ -248,15 +231,11 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     }
 
     private func resetRecording() {
-        // Para a gravação se estiver em andamento
         stopRecording()
         
-        // Reseta o timer
         elapsedTime = 0
-        updateTimerLabel()
         
-        // Aqui você pode adicionar qualquer outra lógica de limpeza
-        // como remover o arquivo de áudio se já tiver sido salvo (ver com o Andrei)
+        updateTimerLabel()
     }
     
     private func showFinishConfirmationAlert() {
@@ -301,13 +280,10 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     }
         
     private func handleFinishRecording() {
-        // 1. Primeiro para a gravação
         stopRecording()
             
-        // 2. Aqui você pode implementar a lógica de salvamento do áudio no futuro
-        saveAudioRecording() // Função reservada para implementação futura
+        saveAudioRecording()
             
-        // 3. Reseta o timer
         resetRecording()
         
         changeScreen()
@@ -364,23 +340,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
             }
         }
     }
-    
-    // Função para iniciar/parar a animação
-    @objc func toggleRecordingAnimation() {
-            if recordingState == .recording {
-                startRecordingAnimation()
-            } else {
-                stopRecordingAnimation()
-            }
-            audioRecorder?.stop()
-            audioRecorder = nil
-            
-            do {
-                try AVAudioSession.sharedInstance().setActive(false)
-            } catch {
-                print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
-            }
-        }
 
     // Inicia a animação
     func startRecordingAnimation() {
@@ -417,10 +376,8 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
                           },
                           completion: nil)
     }
-    
 }
 
-// MARK: - addViews & setConstraints
 extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func addSubViews() {
@@ -446,18 +403,14 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
             
             /// buttonsStackView constraints
             buttonsStackView.topAnchor.constraint(equalTo: soundWaveImage.bottomAnchor, constant: 40),
-            buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
+            recordButton.widthAnchor.constraint(equalToConstant: 92),
+            recordButton.heightAnchor.constraint(equalToConstant: 92)
         ])
-    }
-    
-    func setupViews() {
-        addSubViews()
-        setupConstraints()
     }
 }
 
-// MARK: - button functions
 extension VoiceRecordingViewController {
     
     /// linkar botões com suas ações
@@ -499,4 +452,26 @@ extension VoiceRecordingViewController {
                audioRecorder?.pause()
            }
        }
+    
+    // Função para iniciar/parar a animação
+    @objc func toggleRecordingAnimation() {
+            if recordingState == .recording {
+                startRecordingAnimation()
+            } else {
+                stopRecordingAnimation()
+            }
+            audioRecorder?.stop()
+            audioRecorder = nil
+            
+            do {
+                try AVAudioSession.sharedInstance().setActive(false)
+            } catch {
+                print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
+            }
+        }
+    
+    @objc private func updateTimer() {
+        elapsedTime += 0.01
+        updateTimerLabel()
+    }
 }

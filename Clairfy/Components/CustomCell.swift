@@ -4,7 +4,7 @@ class CustomCell: UITableViewCell {
     // MARK: Properties
     static let identifier = "cuctom-cell"
     
-    // MARK: Components
+    // MARK: Subviews
     private lazy var title: UILabel = {
         var label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
