@@ -221,8 +221,9 @@ extension ConsultationListVC {
                 MicrophonePermissionManager.showPermissionAlert(on: self)
                 return
             }
-
-            changeScreen(to: VoiceRecordingViewController())
+            let viewController = VoiceRecordingViewController()
+            viewController.startingRecording.toggle()
+            changeScreen(to: viewController)
         }
     }
 }

@@ -101,6 +101,8 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return AudioRecordManager(voiceRecordVC: self)
     }()
     
+    var startingRecording: Bool = false
+    
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -117,6 +119,11 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         recorder.updateTimerLabel()
         
         navigationController?.navigationBar.prefersLargeTitles = false
+        
+        if startingRecording {
+            recordButtonTapped()
+            startingRecording = false
+        }
     }
 }
 
