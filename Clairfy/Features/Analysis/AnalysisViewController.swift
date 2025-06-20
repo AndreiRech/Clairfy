@@ -31,28 +31,6 @@ class AnalysisViewController: UIViewController {
         return button
     }()
     
-    internal lazy var doctorView: DoctorAnalysisView = {
-        let view = DoctorAnalysisView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    internal lazy var patientView: PatientAnalysisView = {
-        let view = PatientAnalysisView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    internal var consultation: ConsultationModel? {
-        didSet {
-            audioComponent.audioPath = consultation?.audio?.audioPath
-            
-            // adição
-            updateUI()
-            analysisGenerated = consultation?.transcription != nil
-        }
-    }
-    
     internal var analysisGenerated: Bool = false {
         didSet {
             updateContentVisibility()
@@ -128,6 +106,32 @@ class AnalysisViewController: UIViewController {
             }
         }
     }
+    
+    lazy var doctorView: DoctorAnalysisView = {
+        let view = DoctorAnalysisView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.consultation = consultation
+        view.delegate = self
+        return view
+    }()
+    
+    lazy var patientView: PatientAnalysisView = {
+        let view = PatientAnalysisView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.consultation = consultation
+        return view
+    }()
+    
+    // MARK: Properties
+    var consultation: ConsultationModel? {
+        didSet {
+            doctorView.consultation = consultation
+            patientView.consultation = consultation
+            audioComponent.audioPath = consultation?.audio?.audioPath
+            updateUI()
+            analysisGenerated = consultation?.transcription != nil
+        }
+    }
         
     internal func updateUI() {
         doctorView.clinicalSummary.text = consultation?.transcription?.summary ?? "Nenhum resumo disponível"
@@ -148,17 +152,51 @@ class AnalysisViewController: UIViewController {
         super.viewDidLoad()
         setup()
         additionalSetup()
+        updateContent()
     }
     
-    internal func additionalSetup() {
+    // MARK: Setup
+    private func additionalSetup() {
         view.backgroundColor = .secondarySystemBackground
         navigationItem.title = "Análise"
         navigationController?.navigationBar.prefersLargeTitles = true
         segmentedControlValueChanged(segmentedControl)
-         
-        if let audioPath = consultation?.audio?.audioPath {
-            print("Áudio da consulta: \(audioPath)")
+        
+        setConsultationTime()
+    }
+    
+    private func setConsultationTime() {
+        guard let audioPath = consultation?.audio?.audioPath else { return }
+
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let url = documents.appendingPathComponent(audioPath)
+
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            print("❌ Arquivo não encontrado: \(url.path)")
+            return
         }
+
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            let durationInSeconds = player.duration
+
+            let hours = Int(durationInSeconds) / 3600
+            let minutes = (Int(durationInSeconds) % 3600) / 60
+            let seconds = Int(durationInSeconds) % 60
+            let formattedDuration = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+
+            audioComponent.duration = formattedDuration
+        } catch {
+            print("❌ Erro ao carregar áudio: \(error)")
+            audioComponent.duration = "00:00:00"
+        }
+    }
+    
+    private func updateContent() {
+        guard let consultationID = consultation?.id else { return }
+
+        let updatedConsultation = Persistence.shared.getConsultation(by: consultationID)
+        self.consultation = updatedConsultation
     }
     
  }
@@ -200,4 +238,26 @@ extension AnalysisViewController: ViewCodeProtocol {
         ])
     }
 
+}
+
+extension AnalysisViewController: AnalysisProtocol {
+    func didTapEdit(category: TranscriptionEnum, transcriptionID: UUID?) {
+        let editVC = AnalysisEditViewController()
+        editVC.transcriptionID = transcriptionID
+        editVC.category = category
+        editVC.delegate = self
+
+        let navController = UINavigationController(rootViewController: editVC)
+                
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        self.present(navController, animated: true)
+    }
+    
+    func didFinishEditing() {
+        updateContent()
+    }
 }

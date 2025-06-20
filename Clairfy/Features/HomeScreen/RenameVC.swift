@@ -71,21 +71,13 @@ class RenameViewController: UIViewController {
         view.backgroundColor = .tertiarySystemBackground
     }
     
-    private func formatDate() -> Date {
-        let now = Date()
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: now)
-        return calendar.date(from: components) ?? now
-    }
-    
     private func createConsultation() {
         guard let audioID = self.audioID else { return }
 
-        let date = formatDate()
-        guard let text = textField.text != "" ? textField.text : "Audio - \(date.formatDate())" else { return }
+        guard let text = textField.text != "" ? textField.text : "Audio - \(Date().formatDate())" else { return }
         
         let audio = Persistence.shared.getAudio(by: audioID)
-        let consultation = ConsultationModel(id: UUID(), title: text, date: date, audio: audio, transcription: nil)
+        let consultation = ConsultationModel(id: UUID(), title: text, date: Date(), audio: audio, transcription: nil)
         
         Persistence.shared.createConsultation(consultation)
     }

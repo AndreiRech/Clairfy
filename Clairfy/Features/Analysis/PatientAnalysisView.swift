@@ -11,6 +11,8 @@ import UIKit
 class PatientAnalysisView: UIView {
     
     // MARK: - Properties
+    var consultation: ConsultationModel?
+    weak var delegate: AnalysisViewController?
  
     // será arrumado esse componente depois...
     internal lazy var patientSummary: TextComponent = {
