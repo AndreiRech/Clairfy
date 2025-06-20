@@ -29,7 +29,7 @@ class AnalysisEditViewController: UIViewController {
     lazy var separator: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .separator
+        view.backgroundColor = .tertiarySystemGroupedBackground
         return view
     }()
     
@@ -45,15 +45,15 @@ class AnalysisEditViewController: UIViewController {
     }()
     
     lazy var stackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [titleLabel, textField])
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, separator, textField])
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.axis = .horizontal
-        stackView.spacing = 32
+        stackView.axis = .vertical
+        stackView.spacing = 16
         stackView.backgroundColor = .secondarySystemBackground
         stackView.layer.cornerRadius = 24
         stackView.layer.masksToBounds = true
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 0)
+        stackView.layoutMargins = UIEdgeInsets(top: 16, left: 24, bottom: 16, right: 0)
         return stackView
     }()
     
@@ -67,12 +67,13 @@ class AnalysisEditViewController: UIViewController {
     // MARK: Properties
     var transcriptionID: UUID?
     var category: TranscriptionEnum?
+    weak var delegate: AnalysisViewController?
     
     // MARK: Functions
-    func additionalSetup() {
+    private func additionalSetup() {
         title = "Detalhes"
         
-        setupTitle()
+        setupInfo()
         
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.rightBarButtonItem = saveButtonItem
@@ -81,7 +82,7 @@ class AnalysisEditViewController: UIViewController {
         view.backgroundColor = .tertiarySystemBackground
     }
     
-    private func setupTitle()  {
+    private func setupInfo()  {
         guard
             let category = self.category,
             let transcriptionID = self.transcriptionID,
@@ -91,14 +92,19 @@ class AnalysisEditViewController: UIViewController {
         switch category {
         case .transcription:
             titleLabel.text = "Resumo"
+            textField.text = transcription.transcription
         case .summary:
             titleLabel.text = "Resumo da Consulta"
+            textField.text = transcription.summary
         case .didctarized:
             titleLabel.text = "Resumo Cliníco"
+            textField.text = transcription.didctarized
         case .keyWords:
             titleLabel.text = "Palavras Chave"
+            textField.text = transcription.keyWords.joined(separator: "\n\n")
         case .actionPoints:
             titleLabel.text = "Pontos de Ação"
+            textField.text = transcription.actionPoints.joined(separator: "\n\n")
         }
     }
     
@@ -149,8 +155,8 @@ extension AnalysisEditViewController: ViewCodeProtocol {
             stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            
-            textField.heightAnchor.constraint(equalToConstant: 44),
+            separator.heightAnchor.constraint(equalToConstant: 1),
+            textField.heightAnchor.constraint(equalToConstant: 200),
         ])
     }
 }
@@ -162,7 +168,7 @@ extension AnalysisEditViewController {
     
     @objc func saveButtonTapped() {
         saveTranscription()
-    
+        delegate?.didFinishEditing()
         dismiss(animated: true)
     }
 }
