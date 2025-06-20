@@ -31,6 +31,8 @@ class DoctorAnalysisView: UIView {
         }
     }
     
+    weak var delegate: AnalysisViewController?
+    
     // MARK: - UI Components
     private lazy var clinicalSummary: TextComponent = {
         let textComponent = TextComponent()
@@ -48,7 +50,7 @@ class DoctorAnalysisView: UIView {
         textComponent.actionButtonIconColor = .tertiarySystemBackground
         textComponent.actionButtonLabelColor = .tertiarySystemBackground
         
-        textComponent.editButton.addTarget(self, action: #selector(editButtonTapped), for: .touchUpInside)
+        textComponent.editButton.addTarget(self, action: #selector(editButtonTapped(_:)), for: .touchUpInside)
         textComponent.actionButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
         
         return textComponent
@@ -70,6 +72,8 @@ class DoctorAnalysisView: UIView {
         textComponent.editButtonLabelColor = .tertiarySystemBackground
         textComponent.actionButtonLabelColor = .tertiarySystemBackground
         
+        textComponent.editButton.addTarget(self, action: #selector(editButtonTapped(_:)), for: .touchUpInside)
+
         return textComponent
     }()
     
@@ -162,8 +166,16 @@ class DoctorAnalysisView: UIView {
     }
     
     // MARK: - Button Actions
-    @objc private func editButtonTapped() {
-        print("Botão Editar (Médico) pressionado")
+    @objc private func editButtonTapped(_ sender: UIButton) {
+        guard let transcriptionID = self.consultation?.transcription?.id else { return }
+
+        if sender == clinicalSummary.editButton {
+            delegate?.didTapEdit(category: .summary, transcriptionID: transcriptionID)
+        } else if sender == actionPoints.editButton {
+            delegate?.didTapEdit(category: .actionPoints, transcriptionID: transcriptionID)
+        } else {
+            print("❌ Botão desconhecido")
+        }
     }
     
     @objc private func copyButtonTapped() {

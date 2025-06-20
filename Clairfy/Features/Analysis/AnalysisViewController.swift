@@ -51,6 +51,7 @@ class AnalysisViewController: UIViewController {
         let view = DoctorAnalysisView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.consultation = consultation
+        view.delegate = self
         return view
     }()
     
@@ -86,14 +87,11 @@ class AnalysisViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        guard let consultationID = consultation?.id else { return }
-
-           let updatedConsultation = Persistence.shared.getConsultation(by: consultationID)
-           self.consultation = updatedConsultation
+        updateContent()
     }
     
     // MARK: Setup
-    func additionalSetup() {
+    private func additionalSetup() {
         view.backgroundColor = .secondarySystemBackground
         navigationItem.title = "Análise"
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -102,6 +100,13 @@ class AnalysisViewController: UIViewController {
         if let audioPath = consultation?.audio?.audioPath {
             print("Áudio da consulta: \(audioPath)")
         }
+    }
+    
+    private func updateContent() {
+        guard let consultationID = consultation?.id else { return }
+
+        let updatedConsultation = Persistence.shared.getConsultation(by: consultationID)
+        self.consultation = updatedConsultation
     }
 }
 
@@ -263,5 +268,27 @@ extension AnalysisViewController: AVAudioPlayerDelegate {
         audioComponent.playButtonState = .play
         isPlaying = false
         print("✅ Áudio terminou de tocar")
+    }
+}
+
+extension AnalysisViewController: AnalysisProtocol {
+    func didTapEdit(category: TranscriptionEnum, transcriptionID: UUID?) {
+        let editVC = AnalysisEditViewController()
+        editVC.transcriptionID = transcriptionID
+        editVC.category = category
+        editVC.delegate = self
+
+        let navController = UINavigationController(rootViewController: editVC)
+                
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        self.present(navController, animated: true)
+    }
+    
+    func didFinishEditing() {
+        updateContent()
     }
 }
