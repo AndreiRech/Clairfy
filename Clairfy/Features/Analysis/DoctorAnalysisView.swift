@@ -41,8 +41,8 @@ class DoctorAnalysisView: UIView {
         
         textComponent.editButtonText = "Editar"
         textComponent.editButtonImage = UIImage(systemName: "pencil")
-        textComponent.actionButtonText = "Copiar"
-        textComponent.actionButtonImage = UIImage(systemName: "doc.on.doc.fill")
+        textComponent.actionButtonText = "Compartilhar"
+        textComponent.actionButtonImage = UIImage(systemName: "square.and.arrow.up.fill")
         textComponent.editButtonColor = .clairBlue
         textComponent.actionButtonColor = .clairBlue
         textComponent.editButtonIconColor = .tertiarySystemBackground
@@ -51,7 +51,7 @@ class DoctorAnalysisView: UIView {
         textComponent.actionButtonLabelColor = .tertiarySystemBackground
         
         textComponent.editButton.addTarget(self, action: #selector(editButtonTapped(_:)), for: .touchUpInside)
-        textComponent.actionButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
+        textComponent.actionButton.addTarget(self, action: #selector(copyButtonTapped(_:)), for: .touchUpInside)
         
         return textComponent
     }()
@@ -63,8 +63,8 @@ class DoctorAnalysisView: UIView {
         
         textComponent.editButtonText = "Editar"
         textComponent.editButtonImage = UIImage(systemName: "pencil")
-        textComponent.actionButtonText = "Copiar"
-        textComponent.actionButtonImage = UIImage(systemName: "doc.on.doc.fill")
+        textComponent.actionButtonText = "Compartilhar"
+        textComponent.actionButtonImage = UIImage(systemName: "square.and.arrow.up.fill")
         textComponent.editButtonColor = .clairBlue
         textComponent.actionButtonColor = .clairBlue
         textComponent.editButtonIconColor = .tertiarySystemBackground
@@ -73,7 +73,7 @@ class DoctorAnalysisView: UIView {
         textComponent.actionButtonLabelColor = .tertiarySystemBackground
         
         textComponent.editButton.addTarget(self, action: #selector(editButtonTapped(_:)), for: .touchUpInside)
-
+        textComponent.actionButton.addTarget(self, action: #selector(copyButtonTapped(_:)), for: .touchUpInside)
         return textComponent
     }()
     
@@ -178,8 +178,22 @@ class DoctorAnalysisView: UIView {
         }
     }
     
-    @objc private func copyButtonTapped() {
-        print("Botão Copiar (Médico) pressionado")
+    @objc private func copyButtonTapped(_ sender: UIButton) {
+        guard let transcription = self.consultation?.transcription else { return }
+
+        var text: String = ""
+        if sender == clinicalSummary.editButton {
+            text = transcription.summary
+        } else if sender == actionPoints.editButton {
+            text = transcription.actionPoints.joined(separator: "\n\n")
+        } else { }
+
+        let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+            
+        if let viewController = self.delegate {
+            activityVC.popoverPresentationController?.sourceView = viewController.view                
+            viewController.present(activityVC, animated: true, completion: nil)
+        }
     }
     
     var tempoDeRespostaAPI: Bool = false
