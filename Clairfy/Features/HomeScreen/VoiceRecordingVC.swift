@@ -28,6 +28,13 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return imageView
     }()
     
+    private lazy var visualizerView: AudioVisualizerView = {
+        let v = AudioVisualizerView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        /*v.isHidden = true */             // aparece só quando precisar
+        return v
+    }()
+    
     lazy var recordButton: UIButton = {
         var button = UIButton()
         button.backgroundColor = .clairBlue
@@ -100,12 +107,24 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     private lazy var recorder: AudioRecordManager = {
         return AudioRecordManager(voiceRecordVC: self)
     }()
+   
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Se já estamos gravando ao entrar na tela, exiba a waveform imediatamente
+        if recorder.recordingState == .recording {
+            toggleWaveform(visible: true)
+        }
+    }
+
     
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
         additionalSetup()
+        visualizerView.drawVisualizerCircles()
+        recorder.audioMeteringDelegate = visualizerView
     }
     
     // MARK: Functions
@@ -125,7 +144,7 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(recordingImage)
         view.addSubview(timerLabel)
-        view.addSubview(soundWaveImage)
+        view.addSubview(visualizerView)
         view.addSubview(buttonsStackView)
     }
     
@@ -140,11 +159,15 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             /// soundWaveImage constraints
-            soundWaveImage.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
-            soundWaveImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//            soundWaveImage.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
+//            soundWaveImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            visualizerView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
+               visualizerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               visualizerView.heightAnchor.constraint(equalToConstant: 100),
+               visualizerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             
             /// buttonsStackView constraints
-            buttonsStackView.topAnchor.constraint(equalTo: soundWaveImage.bottomAnchor, constant: 40),
+            buttonsStackView.topAnchor.constraint(equalTo: visualizerView.bottomAnchor, constant: 40),
             buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             recordButton.widthAnchor.constraint(equalToConstant: 92),
@@ -166,6 +189,16 @@ extension VoiceRecordingViewController {
         finishedAudioButton.addTarget(self, action: #selector(finishButtonTapped), for: .touchUpInside)
         deleteAudioButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
     }
+   
+    private func toggleWaveform(visible: Bool) {
+        if visible {
+            visualizerView.isHidden = false
+            visualizerView.drawVisualizerCircles()   // repinta bolinhas
+        } else {
+            visualizerView.removeVisualizerCircles() // limpa bolinhas
+            visualizerView.isHidden = true
+        }
+    }
     
     @objc func deleteButtonTapped() {
         recorder.showDeleteConfirmationAlert()
@@ -180,6 +213,7 @@ extension VoiceRecordingViewController {
         case .stopped:
             recorder.startRecording()
             recorder.audioRecorder?.record()
+            toggleWaveform(visible: true)
         case .paused:
             recorder.audioRecorder?.record()
             recorder.updateRecordButtonIcon()
@@ -193,11 +227,13 @@ extension VoiceRecordingViewController {
             )
             
             recorder.startRecordingAnimation()
+            toggleWaveform(visible: true)
         case .recording:
             recorder.pauseRecording()
             recorder.audioRecorder?.pause()
             recorder.timer?.invalidate()
             recorder.timer = nil
+            toggleWaveform(visible: false)
 
         }
     }
