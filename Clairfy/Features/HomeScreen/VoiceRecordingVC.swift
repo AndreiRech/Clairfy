@@ -28,10 +28,9 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return imageView
     }()
     
-    private lazy var visualizerView: AudioVisualizerView = {
-        let v = AudioVisualizerView()
+    private lazy var visualizerView: AudioVisualizerComponent = {
+        let v = AudioVisualizerComponent()
         v.translatesAutoresizingMaskIntoConstraints = false
-        /*v.isHidden = true */             // aparece só quando precisar
         return v
     }()
     

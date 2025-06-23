@@ -8,16 +8,8 @@
 import Foundation
 import UIKit
 
-protocol AudioMeteringDelegate: AnyObject {
-    /// amplitude já normalizada (0‒1)
-    func audioMeter(didUpdateAmplitude amplitude: Float)
-}
-
-class AudioVisualizerView: UIView {
-    
-    enum ComponentValue {
-        static let numOfColumns = 30
-    }
+class AudioVisualizerComponent: UIView {
+    static let numOfColumns = 30
     
     // Propriedade para a cor dos círculos
     var visualizerColor: UIColor = .clairBlue {  // Default color
@@ -45,20 +37,20 @@ class AudioVisualizerView: UIView {
     }
     
     func drawVisualizerCircles() {
-        self.amplitudesHistory = Array(repeating: 0, count: ComponentValue.numOfColumns)
+        self.amplitudesHistory = Array(repeating: 0, count: AudioVisualizerComponent.numOfColumns)
         
         // Ajuste no cálculo do diâmetro para garantir espaçamento correto
-        let diameter = self.bounds.width / CGFloat(3 * ComponentValue.numOfColumns + 1)  // Modificado de 2 para 3 para aumentar o espaçamento
+        let diameter = self.bounds.width / CGFloat(3 * AudioVisualizerComponent.numOfColumns + 1)  // Modificado de 2 para 3 para aumentar o espaçamento
         self.columnWidth = diameter / 2  // Reduzindo a largura dos círculos
 
         let startingPointY = self.bounds.midY - diameter / 2
         
         // Recalculando o ponto inicial X para preencher toda a largura horizontalmente
-        let totalPadding = self.bounds.width - CGFloat(ComponentValue.numOfColumns) * diameter
-        let padding = totalPadding / CGFloat(ComponentValue.numOfColumns + 1)
+        let totalPadding = self.bounds.width - CGFloat(AudioVisualizerComponent.numOfColumns) * diameter
+        let padding = totalPadding / CGFloat(AudioVisualizerComponent.numOfColumns + 1)
         var startingPointX = padding
         
-        for _ in 0..<ComponentValue.numOfColumns {
+        for _ in 0 ..< AudioVisualizerComponent.numOfColumns {
             let circleOrigin = CGPoint(x: startingPointX, y: startingPointY)
             let circleSize = CGSize(width: self.columnWidth!, height: diameter)
             
@@ -157,7 +149,7 @@ class AudioVisualizerView: UIView {
     
     func updateVisualizerView(with amplitude: CGFloat) {
         
-        guard self.columns.count == ComponentValue.numOfColumns else { return }
+        guard self.columns.count == AudioVisualizerComponent.numOfColumns else { return }
         
         // Adding a new value, removing the oldest
         self.amplitudesHistory.append(amplitude)
@@ -170,7 +162,7 @@ class AudioVisualizerView: UIView {
 }
 
 // MARK: - AudioMeteringDelegate
-extension AudioVisualizerView: AudioMeteringDelegate {
+extension AudioVisualizerComponent: AudioMeteringProtocol {
     func audioMeter(didUpdateAmplitude amplitude: Float) {
         DispatchQueue.main.async {
             self.updateVisualizerView(with: CGFloat(amplitude))
@@ -181,7 +173,7 @@ extension AudioVisualizerView: AudioMeteringDelegate {
 // MARK: – Redesenha após AutoLayout
 private var _lastSizeKey: UInt8 = 0
 
-extension AudioVisualizerView {
+extension AudioVisualizerComponent {
 
     private var lastDrawnSize: CGSize {
         get { (objc_getAssociatedObject(self, &_lastSizeKey) as? NSValue)?.cgSizeValue ?? .zero }

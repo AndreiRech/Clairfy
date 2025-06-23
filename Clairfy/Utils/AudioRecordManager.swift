@@ -257,28 +257,24 @@ import AVFoundation
 extension AudioRecordManager {
     
     // MARK: – Waveform metering
-    private struct Metering {
-        static var timerKey   = "meteringTimer"
-        static var delegate   = "audioMeteringDelegate"
-        static var amplitudes = "amplitudesDuringRecording"
-    }
     
     /// quem recebe as amplitudes (ex.: AudioVisualizerView)
-    weak var audioMeteringDelegate: AudioMeteringDelegate? {
-        get { objc_getAssociatedObject(self, &Metering.delegate) as? AudioMeteringDelegate }
+    weak var audioMeteringDelegate: AudioMeteringProtocol? {
+        get { objc_getAssociatedObject(self, &Metering.delegate) as? AudioMeteringProtocol }
         set { objc_setAssociatedObject(self, &Metering.delegate, newValue, .OBJC_ASSOCIATION_ASSIGN) }
     }
-    
+
     /// últimos valores (caso você queira salvar)
     var amplitudesDuringRecording: [Double] {
         get { (objc_getAssociatedObject(self, &Metering.amplitudes) as? [Double]) ?? [] }
         set { objc_setAssociatedObject(self, &Metering.amplitudes, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
-    
+
     private var meteringTimer: Timer? {
         get { objc_getAssociatedObject(self, &Metering.timerKey) as? Timer }
         set { objc_setAssociatedObject(self, &Metering.timerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
+
     
     /// inicie logo depois de `audioRecorder?.record()`
     func startWaveformMetering() {
