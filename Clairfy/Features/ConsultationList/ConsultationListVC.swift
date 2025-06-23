@@ -42,13 +42,6 @@ class ConsultationListVC: UIViewController {
         button.backgroundColor = .clairBlue
         button.translatesAutoresizingMaskIntoConstraints = false
 
-        /// constraints
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 92),
-            button.heightAnchor.constraint(equalToConstant: 92)
-        ])
-
-        /// Força o cálculo do layout
         DispatchQueue.main.async {
             let iconSize = button.bounds.width * 0.1
             let symbolConfig = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .heavy)
@@ -68,8 +61,6 @@ class ConsultationListVC: UIViewController {
         button.layer.borderWidth = 3
         
         button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
-        
-
         return button
     }()
     
@@ -80,12 +71,10 @@ class ConsultationListVC: UIViewController {
             tableView.reloadData()
         }
     }
-    
     var consultation: ConsultationModel?
-    
     var rows: [ConsultationModel] = []
 
-    // MARK: Initializers
+    // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
@@ -109,51 +98,12 @@ class ConsultationListVC: UIViewController {
     }
     
     func buildContent() {
-        rows = buildRows()
+        rows = consultations
     }
-    func buildRows() -> [ConsultationModel] {
-        return consultations
-    }
-    
+
     func getConsultation(by indexPath: IndexPath) -> ConsultationModel {
         return rows[indexPath.row]
     }
-    
-
-    func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
-        AVAudioApplication.requestRecordPermission { granted in
-            DispatchQueue.main.async {
-                completion(granted)
-            }
-        }
-    }
-    
-    private func showMicrophoneAccessAlert() {
-        let alert = UIAlertController(
-            title: "Permissão Necessária",
-            message: "Este app precisa de acesso ao microfone para gravar áudio. Vá em Ajustes > Privacidade > Microfone e ative o acesso.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Abrir Ajustes", style: .default) { _ in
-            if let settingsURL = URL(string: UIApplication.openSettingsURLString),
-               UIApplication.shared.canOpenURL(settingsURL) {
-                UIApplication.shared.open(settingsURL)
-            }
-        })
-
-        self.present(alert, animated: true, completion: nil)
-    }
-    
-
-    private func changeScreen() {
-        let viewController = AnalysisViewController()
-        viewController.consultation = consultation
-        navigationController?.pushViewController(viewController, animated: true)
-        navigationController?.isNavigationBarHidden = false
-    }
-
 }
 
 extension ConsultationListVC: ViewCodeProtocol {
@@ -175,6 +125,8 @@ extension ConsultationListVC: ViewCodeProtocol {
             
             button.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
             button.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            button.heightAnchor.constraint(equalToConstant: 92),
+            button.widthAnchor.constraint(equalToConstant: 92)
         ])
     }
 }
@@ -183,7 +135,9 @@ extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.consultation = self.getConsultation(by: indexPath)
         
-        changeScreen()
+        let viewController = AnalysisViewController()
+        viewController.consultation = consultation
+        changeScreen(to: viewController)
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -204,6 +158,14 @@ extension ConsultationListVC: UITableViewDelegate {
         action.image = UIImage(systemName: "trash.fill")
 
         return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        guard let indexPath = indexPath else { return }
+        
+        if let cell = tableView.cellForRow(at: indexPath) as? CustomCell {
+            cell.applyRoundedCorners(at: indexPath, totalRows: rows.count)
+        }
     }
 }
 
@@ -227,24 +189,19 @@ extension ConsultationListVC: UITableViewDataSource {
         
         cell.configure(titleText: consultation.title, timerText: consultation.date.formatDate())
         cell.backgroundColor = .tertiarySystemBackground
-        
-        if indexPath.row == 0 {
-            cell.layer.cornerRadius = 16
-            cell.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-            
-            if rows.count == 1 {
-                cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner, .layerMaxXMinYCorner]
-                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-            }
-        } else if indexPath.row == rows.count - 1 {
-            cell.layer.cornerRadius = 16
-            cell.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMinXMaxYCorner]
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        } else {
-            cell.layer.cornerRadius = 0
-        }
+        cell.applyRoundedCorners(at: indexPath, totalRows: rows.count)
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, willDeselectRowAt indexPath: IndexPath) -> IndexPath? {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CustomCell.identifier, for: indexPath) as? CustomCell else {
+            return nil
+        }
+        
+        cell.applyRoundedCorners(at: indexPath, totalRows: rows.count)
+        
+        return nil
     }
 }
 
@@ -258,19 +215,15 @@ extension ConsultationListVC {
     }
     
     @objc func buttonTapped() {
-        
-        requestMicrophonePermission { [weak self] granted in
+        MicrophonePermissionManager.requestPermission { [weak self] granted in
+            guard let self = self else { return }
             guard granted else {
-                self?.showMicrophoneAccessAlert()
+                MicrophonePermissionManager.showPermissionAlert(on: self)
                 return
             }
-            
-//            self?.startRecording()
+            let viewController = VoiceRecordingViewController()
+            viewController.startingRecording.toggle()
+            changeScreen(to: viewController)
         }
-
-        
-        let viewController = VoiceRecordingViewController()
-        navigationController?.pushViewController(viewController, animated: true)
-        navigationController?.isNavigationBarHidden = false
     }
 }

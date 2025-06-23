@@ -1,10 +1,3 @@
-//
-//  GlassButtonComponent.swift
-//  Clairfy
-//
-//  Created by Bernardo Garcia Fensterseifer on 16/06/25.
-//
-
 import UIKit
 
 class GlassButton: UIButton {
