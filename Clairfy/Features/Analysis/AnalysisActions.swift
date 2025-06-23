@@ -9,8 +9,7 @@ import AVFoundation
 import UIKit
 
 // MARK: - Actions
-extension AnalysisViewController {
-    
+extension AnalysisViewController { 
     @objc internal func gerarAnalise() {
         guard let audioPath = consultation?.audio?.audioPath else {
             print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")

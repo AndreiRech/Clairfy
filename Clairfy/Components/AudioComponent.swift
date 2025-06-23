@@ -59,7 +59,7 @@ class AudioComponent: UIView {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(systemName: "play.fill"), for: .normal)
         button.imageView?.contentMode = .scaleAspectFit
-        button.tintColor = .tertiarySystemBackground  // Corrigido: aplica direto no botão
+        button.tintColor = .tertiarySystemBackground
         button.layer.cornerRadius = 19
         return button
     }()
