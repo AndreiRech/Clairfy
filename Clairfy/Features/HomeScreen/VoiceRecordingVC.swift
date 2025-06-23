@@ -28,6 +28,12 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return imageView
     }()
     
+    private lazy var visualizerView: AudioVisualizerComponent = {
+        let v = AudioVisualizerComponent()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
     lazy var recordButton: UIButton = {
         var button = UIButton()
         button.backgroundColor = .clairBlue
@@ -100,6 +106,11 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     private lazy var recorder: AudioRecordManager = {
         return AudioRecordManager(voiceRecordVC: self)
     }()
+   
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+
     
     var startingRecording: Bool = false
     
@@ -108,6 +119,9 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         super.viewDidLoad()
         setup()
         additionalSetup()
+        visualizerView.drawVisualizerCircles()
+        recorder.audioMeteringDelegate = visualizerView
+        
     }
     
     // MARK: Functions
@@ -132,7 +146,7 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(recordingImage)
         view.addSubview(timerLabel)
-        view.addSubview(soundWaveImage)
+        view.addSubview(visualizerView)
         view.addSubview(buttonsStackView)
     }
     
@@ -147,11 +161,15 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             /// soundWaveImage constraints
-            soundWaveImage.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
-            soundWaveImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//            soundWaveImage.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
+//            soundWaveImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            visualizerView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
+               visualizerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               visualizerView.heightAnchor.constraint(equalToConstant: 100),
+               visualizerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             
             /// buttonsStackView constraints
-            buttonsStackView.topAnchor.constraint(equalTo: soundWaveImage.bottomAnchor, constant: 40),
+            buttonsStackView.topAnchor.constraint(equalTo: visualizerView.bottomAnchor, constant: 40),
             buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             recordButton.widthAnchor.constraint(equalToConstant: 92),
@@ -172,6 +190,11 @@ extension VoiceRecordingViewController {
         recordButton.addTarget(self, action: #selector(toggleRecordingAnimation), for: .touchDragEnter)
         finishedAudioButton.addTarget(self, action: #selector(finishButtonTapped), for: .touchUpInside)
         deleteAudioButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    }
+   
+    private func toggleWaveform(visible: Bool) {
+            visualizerView.removeVisualizerCircles()
+            visualizerView.isHidden = false
     }
     
     @objc func deleteButtonTapped() {
@@ -200,12 +223,12 @@ extension VoiceRecordingViewController {
             )
             
             recorder.startRecordingAnimation()
+            recorder.updateRecordButtonIcon()
         case .recording:
             recorder.pauseRecording()
             recorder.audioRecorder?.pause()
             recorder.timer?.invalidate()
             recorder.timer = nil
-
         }
     }
     

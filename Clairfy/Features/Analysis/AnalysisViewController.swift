@@ -9,8 +9,83 @@ import AVFoundation
 import UIKit
 
 class AnalysisViewController: UIViewController {
-    // MARK: Subviews
-    private lazy var segmentedControl: UISegmentedControl = {
+    
+    // MARK: - variaveis e pa (desculpa pelo informalismo, mas quero que fique claro)
+    
+    // será arrumado esse componente depois...
+    internal lazy var generateAnalysisButton: GlassButton = {
+        let button = GlassButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        button.buttonText = "Gerar Análise"
+        button.textColor = .clairBlue
+        button.fontSize = 22
+        button.fontWeight = .semibold
+        button.blurOpacity = 0.35
+        button.glassBorderWidth = 1.0
+        button.cornerRadius = 24
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        
+        button.addTarget(self, action: #selector(gerarAnalise), for: .touchUpInside)
+        
+        return button
+    }()
+    
+    internal var analysisGenerated: Bool = false {
+        didSet {
+            updateContentVisibility()
+        }
+    }
+    
+    internal var isLoading: Bool = false {
+        didSet {
+            updateLoadingState()
+        }
+    }
+    
+    internal lazy var loadingView: LoaderView = {
+        let view = LoaderView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        return view
+    }()
+    
+    internal lazy var audioComponent: AudioComponent = {
+        let component = AudioComponent()
+        component.translatesAutoresizingMaskIntoConstraints = false
+        component.title = consultation?.title
+        component.date = consultation?.date.formatDate()
+        component.duration = "00:48:14" //arrumar tmb, mas achoq nn tem como
+        component.audioPath = consultation?.audio?.audioPath
+            
+        // Configurar ações
+        component.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+            
+        return component
+    }()
+    
+    internal lazy var loader = LoaderView()
+    
+    internal var audioPlayer: AVAudioPlayer?
+    
+    internal var isPlaying = false
+    
+    internal let scrollView: UIScrollView = {
+        let view = UIScrollView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.showsVerticalScrollIndicator = false
+        return view
+    }()
+
+    internal lazy var contentView: UIStackView = {
+        let view = UIStackView(arrangedSubviews: [segmentedControl, audioComponent, doctorView, patientView])
+        view.axis = .vertical
+        view.spacing = 16
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    internal lazy var segmentedControl: UISegmentedControl = {
         let control = UISegmentedControl(items: ["Médico", "Paciente"])
         control.translatesAutoresizingMaskIntoConstraints = false
         control.selectedSegmentIndex = 0
@@ -18,36 +93,21 @@ class AnalysisViewController: UIViewController {
         return control
     }()
     
-    private lazy var audioComponent: AudioComponent = {
-        let component = AudioComponent()
-        component.translatesAutoresizingMaskIntoConstraints = false
-        component.title = consultation?.title
-        component.date = consultation?.date.formatDate()
-        component.duration = "00:48:14"
-        component.audioPath = consultation?.audio?.audioPath
+    // MARK: - métodos e pa
+    internal func updateContentVisibility() {
+        UIView.animate(withDuration: 0.3) {
+            let visible = self.analysisGenerated
+            self.doctorView.contentStackView.isHidden = !visible
             
-        // Configurar cores
-        component.titleColor = .label
-        component.dateColor = .secondaryLabel
-        component.durationColor = .secondaryLabel
-        component.playButtonColor = .clairBlue
-        component.trashButtonColor = .clairBlue
-        component.shareButtonColor = .clairBlue
-        component.playButtonIconColor = .tertiarySystemBackground
-        component.trashButtonIconColor = .tertiarySystemBackground
-        component.shareButtonIconColor = .tertiarySystemBackground
-        component.trashButtonIconWeight = .bold
-        component.shareButtonIconWeight = .bold
-            
-        // Configurar ações
-        component.playButton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
-        component.trashButton.addTarget(self, action: #selector(trashButtonTapped), for: .touchUpInside)
-        component.shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
-            
-        return component
-    }()
+            if self.segmentedControl.selectedSegmentIndex == 0 {
+                self.patientView.isHidden = true
+            } else {
+                self.patientView.isHidden = false
+            }
+        }
+    }
     
-    private lazy var doctorView: DoctorAnalysisView = {
+    lazy var doctorView: DoctorAnalysisView = {
         let view = DoctorAnalysisView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.consultation = consultation
@@ -55,14 +115,12 @@ class AnalysisViewController: UIViewController {
         return view
     }()
     
-    private lazy var patientView: PatientAnalysisView = {
+    lazy var patientView: PatientAnalysisView = {
         let view = PatientAnalysisView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.consultation = consultation
         return view
     }()
-    
-    private lazy var loader = LoaderView()
     
     // MARK: Properties
     var consultation: ConsultationModel? {
@@ -70,23 +128,30 @@ class AnalysisViewController: UIViewController {
             doctorView.consultation = consultation
             patientView.consultation = consultation
             audioComponent.audioPath = consultation?.audio?.audioPath
+            updateUI()
+            analysisGenerated = consultation?.transcription != nil
         }
     }
+        
+    internal func updateUI() {
+        doctorView.clinicalSummary.text = consultation?.transcription?.summary ?? "Nenhum resumo disponível"
+        doctorView.actionPoints.text = consultation?.transcription?.actionPoints.joined(separator: "\n\n") ?? "Nenhum ponto de ação disponível"
+        patientView.patientSummary.text = consultation?.transcription?.didctarized ?? "Nenhum resumo disponível"
+    }
+        
+    internal func updateLoadingState() {
+        loadingView.isHidden = !isLoading
+        generateAnalysisButton.isEnabled = !isLoading
+        generateAnalysisButton.alpha = isLoading ? 0.7 : 1.0
+        doctorView.isHidden = isLoading
+        patientView.isHidden = isLoading
+    }
     
-    private var audioPlayer: AVAudioPlayer?
-    private var isPlaying = false
-    private let scrollView = UIScrollView()
-    private let contentView = UIView()
-
-    // MARK: Lifecycle
+    // MARK: - main e pa
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
         additionalSetup()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
         updateContent()
     }
     
@@ -94,7 +159,7 @@ class AnalysisViewController: UIViewController {
     private func additionalSetup() {
         view.backgroundColor = .secondarySystemBackground
         navigationItem.title = "Análise"
-        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.prefersLargeTitles = true
         segmentedControlValueChanged(segmentedControl)
         
         setConsultationTime()
@@ -133,167 +198,46 @@ class AnalysisViewController: UIViewController {
         let updatedConsultation = Persistence.shared.getConsultation(by: consultationID)
         self.consultation = updatedConsultation
     }
-}
-
+    
+ }
+    
 // MARK: - ViewCodeProtocol
 extension AnalysisViewController: ViewCodeProtocol {
+    
     func addSubViews() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-        
-        contentView.addSubview(segmentedControl)
-        contentView.addSubview(audioComponent)
-        contentView.addSubview(doctorView)
-        contentView.addSubview(patientView)
+        view.addSubview(loadingView)
+        view.addSubview(generateAnalysisButton)
     }
-    
+
     func setupConstraints() {
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // ScrollView ocupa a tela toda, mas com espaço pro botão
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            scrollView.bottomAnchor.constraint(equalTo: generateAnalysisButton.topAnchor, constant: -16),
 
+            // ContentView dentro da scrollView
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+
+            // LoadingView
+            loadingView.topAnchor.constraint(equalTo: audioComponent.bottomAnchor, constant: 150),
+            loadingView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+
+            // Botão fixo no final da tela
+            generateAnalysisButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            generateAnalysisButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            generateAnalysisButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            generateAnalysisButton.heightAnchor.constraint(equalToConstant: 56)
         ])
-
-        NSLayoutConstraint.activate([
-            segmentedControl.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-            segmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            segmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-
-            audioComponent.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 20),
-            audioComponent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            audioComponent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            doctorView.topAnchor.constraint(equalTo: audioComponent.bottomAnchor, constant: 20),
-            doctorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            doctorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            doctorView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32),
-            
-            patientView.topAnchor.constraint(equalTo: audioComponent.bottomAnchor, constant: 20),
-            patientView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            patientView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            patientView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32)
-        ])
-        
-        // Configuração inicial
-        doctorView.isHidden = false
-        patientView.isHidden = true
-    }
-}
-
-// MARK: - Actions
-extension AnalysisViewController {
-    @objc private func segmentedControlValueChanged(_ sender: UISegmentedControl) {
-        switch sender.selectedSegmentIndex {
-        case 0: // Médico
-            doctorView.isHidden = false
-            patientView.isHidden = true
-        case 1: // Paciente
-            doctorView.isHidden = true
-            patientView.isHidden = false
-        default:
-            break
-        }
-    }
-    
-    private func updatePlayIcon(to state: PlayButtonState) {
-        let iconName: String
-        
-        switch state {
-        case .play:
-            iconName = "play.fill"
-            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-            let image = UIImage(systemName: iconName, withConfiguration: config)
-            audioComponent.playButtonIconColor = .tertiarySystemBackground
-            audioComponent.playButtonView.backgroundColor = .clairBlue
-            audioComponent.playButton.setImage(image, for: .normal)
-        case .pause:
-            iconName = "pause.fill"
-            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-            let image = UIImage(systemName: iconName, withConfiguration: config)
-            audioComponent.playButtonIconColor = .tertiarySystemBackground
-            audioComponent.playButtonView.backgroundColor = .clairBlue
-            audioComponent.playButton.setImage(image, for: .normal)
-            audioComponent.playButton.tintColor = .tertiarySystemBackground
-        }
-    }
-    
-    @objc private func playButtonTapped() {
-        if let player = audioPlayer {
-            if player.isPlaying {
-                player.pause()
-                audioComponent.playButtonState = .play
-                print("⏸ Áudio pausado")
-            } else {
-                player.play()
-                audioComponent.playButtonState = .pause
-                print("▶️ Áudio retomado")
-            }
-            return
-        }
-
-        guard let fileName = consultation?.audio?.audioPath else { return }
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let url = documents.appendingPathComponent(fileName)
-
-        if !FileManager.default.fileExists(atPath: url.path) {
-            print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
-            return
-        }
-        
-        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
-        print("📏 Tamanho do arquivo:", attributes?[.size] ?? "Desconhecido")
-
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-            try audioSession.setActive(true)
-        } catch {
-            print("❌ Erro ao configurar AVAudioSession:", error)
-        }
-
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-            audioComponent.playButtonState = .pause
-            print("🎵 Tocando áudio: \(url.path)")
-        } catch {
-            print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
-        }
     }
 
-    @objc private func trashButtonTapped() {
-        print("Trash button tapped")
-    }
-
-    @objc private func shareButtonTapped() {
-        print("Share button tapped")
-    }
-    
-    enum PlayButtonState {
-        case play
-        case pause
-    }
-}
-
-// MARK: - AVAudioPlayerDelegate
-extension AnalysisViewController: AVAudioPlayerDelegate {
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        audioComponent.playButtonState = .play
-        isPlaying = false
-        print("✅ Áudio terminou de tocar")
-    }
 }
 
 extension AnalysisViewController: AnalysisProtocol {
