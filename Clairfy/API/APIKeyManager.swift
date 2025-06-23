@@ -1,28 +1,30 @@
+//
+//  aham.swift
+//  Clairfy
+//
+//  Created by Bernardo Garcia Fensterseifer on 23/06/25.
+//
+
 import Foundation
 
-struct Prompts {
+struct APIKeyManager {
     
-    static let doctor = Prompts.getPrompt(for: .doctor)
-    static let patient = Prompts.getPrompt(for: .patient)
-
-    static func getPrompt(for type: PromptType) -> String {
-        let filename = "\(type.rawValue).txt"
-        return loadTextFile(named: filename) ?? ""
+    static func getAPIKey() -> String {
+        return loadTextFile(named: "apiKey.txt") ?? ""
     }
-
+    
     private static func loadTextFile(named fileName: String) -> String? {
         guard let url = Bundle.main.url(forResource: fileName, withExtension: nil) else {
             print("❌ Arquivo \(fileName) não encontrado no bundle.")
             return nil
         }
-
+        
         do {
             let content = try String(contentsOf: url, encoding: .utf8)
-            return content
+            return content.trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {
             print("❌ Erro ao ler o arquivo \(fileName): \(error)")
             return nil
         }
     }
-    
 }
