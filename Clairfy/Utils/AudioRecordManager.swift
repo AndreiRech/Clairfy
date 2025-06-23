@@ -220,6 +220,7 @@ class AudioRecordManager {
         currentImageIndex = 0
         voiceRecordVC.recordingImage.image = recordingImages[currentImageIndex]
         
+        recordingState = .recording
         // Configura o timer para trocar as imagens a cada 0.5 segundos
         recordingAnimationTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
             guard let self = self else { return }

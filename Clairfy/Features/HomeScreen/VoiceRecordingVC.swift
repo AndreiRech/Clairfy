@@ -110,11 +110,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
-        // Se já estamos gravando ao entrar na tela, exiba a waveform imediatamente
-        if recorder.recordingState == .recording {
-            toggleWaveform(visible: true)
-        }
     }
 
     
@@ -125,6 +120,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         additionalSetup()
         visualizerView.drawVisualizerCircles()
         recorder.audioMeteringDelegate = visualizerView
+        
     }
     
     // MARK: Functions
@@ -191,13 +187,8 @@ extension VoiceRecordingViewController {
     }
    
     private func toggleWaveform(visible: Bool) {
-        if visible {
+            visualizerView.removeVisualizerCircles()
             visualizerView.isHidden = false
-            visualizerView.drawVisualizerCircles()   // repinta bolinhas
-        } else {
-            visualizerView.removeVisualizerCircles() // limpa bolinhas
-            visualizerView.isHidden = true
-        }
     }
     
     @objc func deleteButtonTapped() {
@@ -213,7 +204,6 @@ extension VoiceRecordingViewController {
         case .stopped:
             recorder.startRecording()
             recorder.audioRecorder?.record()
-            toggleWaveform(visible: true)
         case .paused:
             recorder.audioRecorder?.record()
             recorder.updateRecordButtonIcon()
@@ -227,14 +217,12 @@ extension VoiceRecordingViewController {
             )
             
             recorder.startRecordingAnimation()
-            toggleWaveform(visible: true)
+            recorder.updateRecordButtonIcon()
         case .recording:
             recorder.pauseRecording()
             recorder.audioRecorder?.pause()
             recorder.timer?.invalidate()
             recorder.timer = nil
-            toggleWaveform(visible: false)
-
         }
     }
     

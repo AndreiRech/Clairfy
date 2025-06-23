@@ -16,11 +16,11 @@ protocol AudioMeteringDelegate: AnyObject {
 class AudioVisualizerView: UIView {
     
     enum ComponentValue {
-        static let numOfColumns = 20
+        static let numOfColumns = 30
     }
     
     // Propriedade para a cor dos círculos
-    var visualizerColor: UIColor = UIColor.systemBlue {  // Default color
+    var visualizerColor: UIColor = .clairBlue {  // Default color
         didSet {
             self.updateVisualizerColor()
         }
