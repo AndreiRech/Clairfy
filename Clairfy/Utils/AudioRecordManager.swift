@@ -159,9 +159,12 @@ class AudioRecordManager {
             preferredStyle: .alert
         )
         
-        let cancelAction = UIAlertAction(title: "Cancelar", style: .default)
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .default) { [weak self] _ in
+            self?.enableButtonInteraction()
+        }
         let deleteAction = UIAlertAction(title: "Deletar", style: .cancel) { [weak self] _ in
             self?.resetRecording()
+            self?.disableButtonInteraction()
         }
         
         deleteAction.setValue(UIColor.systemRed, forKey: "titleTextColor")
@@ -170,6 +173,22 @@ class AudioRecordManager {
         alert.addAction(deleteAction)
         
         voiceRecordVC.present(alert, animated: true)
+    }
+    
+    func disableButtonInteraction() {
+        voiceRecordVC.finishedAudioButton.isEnabled = false
+        voiceRecordVC.finishedAudioButton.alpha = 0.5
+        
+        voiceRecordVC.deleteAudioButton.isEnabled = false
+        voiceRecordVC.deleteAudioButton.alpha = 0.5
+    }
+    
+    func enableButtonInteraction() {
+        voiceRecordVC.finishedAudioButton.isEnabled = true
+        voiceRecordVC.finishedAudioButton.alpha = 1
+        
+        voiceRecordVC.deleteAudioButton.isEnabled = true
+        voiceRecordVC.deleteAudioButton.alpha = 1
     }
     
     func handleFinishRecording() {
@@ -227,6 +246,8 @@ class AudioRecordManager {
                               },
                               completion: nil)
         }
+        
+        enableButtonInteraction()
     }
     
     func stopRecordingAnimation() {
