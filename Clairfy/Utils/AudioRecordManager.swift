@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import AVFAudio
+import AVFoundation
 
 class AudioRecordManager {
     // MARK: Propierties
@@ -16,8 +17,17 @@ class AudioRecordManager {
     var audioID: UUID?
     var voiceRecordVC: VoiceRecordingViewController
     
-    init(voiceRecordVC: VoiceRecordingViewController) {
-        self.voiceRecordVC = voiceRecordVC
+    weak var audioMeteringDelegate: AudioMeteringProtocol? {
+        get { objc_getAssociatedObject(self, &Metering.delegate) as? AudioMeteringProtocol }
+        set { objc_setAssociatedObject(self, &Metering.delegate, newValue, .OBJC_ASSOCIATION_ASSIGN) }
+    }
+    var amplitudesDuringRecording: [Double] {
+        get { (objc_getAssociatedObject(self, &Metering.amplitudes) as? [Double]) ?? [] }
+        set { objc_setAssociatedObject(self, &Metering.amplitudes, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    private var meteringTimer: Timer? {
+        get { objc_getAssociatedObject(self, &Metering.timerKey) as? Timer }
+        set { objc_setAssociatedObject(self, &Metering.timerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
     // MARK: Functions
@@ -61,7 +71,6 @@ class AudioRecordManager {
             print("erro")
         }
             
-        // Atualiza o ícone do botão
         updateRecordButtonIcon()
             
         timer = Timer.scheduledTimer(
@@ -240,7 +249,6 @@ class AudioRecordManager {
         voiceRecordVC.recordingImage.image = recordingImages[currentImageIndex]
         
         recordingState = .recording
-        // Configura o timer para trocar as imagens a cada 0.5 segundos
         recordingAnimationTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
@@ -262,7 +270,6 @@ class AudioRecordManager {
         recordingAnimationTimer?.invalidate()
         recordingAnimationTimer = nil
         
-        // Volta para a imagem inicial (ou outra de sua escolha)
         UIView.transition(with: voiceRecordVC.recordingImage,
                           duration: 0.3,
                           options: .transitionCrossDissolve,
@@ -271,33 +278,7 @@ class AudioRecordManager {
                           },
                           completion: nil)
     }
-}
 
-import AVFoundation
-
-extension AudioRecordManager {
-    
-    // MARK: – Waveform metering
-    
-    /// quem recebe as amplitudes (ex.: AudioVisualizerView)
-    weak var audioMeteringDelegate: AudioMeteringProtocol? {
-        get { objc_getAssociatedObject(self, &Metering.delegate) as? AudioMeteringProtocol }
-        set { objc_setAssociatedObject(self, &Metering.delegate, newValue, .OBJC_ASSOCIATION_ASSIGN) }
-    }
-
-    /// últimos valores (caso você queira salvar)
-    var amplitudesDuringRecording: [Double] {
-        get { (objc_getAssociatedObject(self, &Metering.amplitudes) as? [Double]) ?? [] }
-        set { objc_setAssociatedObject(self, &Metering.amplitudes, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-
-    private var meteringTimer: Timer? {
-        get { objc_getAssociatedObject(self, &Metering.timerKey) as? Timer }
-        set { objc_setAssociatedObject(self, &Metering.timerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-
-    
-    /// inicie logo depois de `audioRecorder?.record()`
     func startWaveformMetering() {
         audioRecorder?.isMeteringEnabled = true
         
@@ -309,15 +290,6 @@ extension AudioRecordManager {
 
             self.audioMeteringDelegate?.audioMeter(didUpdateAmplitude: amp)
             self.amplitudesDuringRecording.append(Double(amp))
-            //Não Apaga isso aqui
-//            let avg = recorder.averagePower(forChannel: 0)
-//            let minDb: Float = -50
-//            let clipped = max(minDb, avg)
-//            let normalized = 1 - (abs(clipped) / abs(minDb))
-//
-//            self.audioMeteringDelegate?.audioMeter(didUpdateAmplitude: normalized)
-//            self.amplitudesDuringRecording.append(Double(normalized))
-
         }
         meteringTimer?.fire()
     }
@@ -325,6 +297,11 @@ extension AudioRecordManager {
     func stopWaveformMetering() {
         meteringTimer?.invalidate()
         meteringTimer = nil
+    }
+    
+    // MARK: Init
+    init(voiceRecordVC: VoiceRecordingViewController) {
+        self.voiceRecordVC = voiceRecordVC
     }
 }
 
