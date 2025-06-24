@@ -1,7 +1,6 @@
 import Foundation
 
 struct Prompts {
-    
     static let doctor = Prompts.getPrompt(for: .doctor)
     static let patient = Prompts.getPrompt(for: .patient)
 

@@ -36,7 +36,6 @@ class APIchatGPT {
                completion(text)
            }.resume()
        }
-
       
     func resumirTexto(_ texto: String, type: String, completion: @escaping (String?) -> Void) {
         let prompt = type == "doctor" ? Prompts.doctor : Prompts.patient

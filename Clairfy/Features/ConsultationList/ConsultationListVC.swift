@@ -10,6 +10,15 @@ class ConsultationListVC: UIViewController {
                                action: #selector(searchButtonTapped))
     }()
     
+    private lazy var searchController: UISearchController = {
+        let sc = UISearchController(searchResultsController: nil)
+        sc.obscuresBackgroundDuringPresentation = false
+        sc.searchResultsUpdater = self
+        sc.searchBar.delegate = self
+        sc.searchBar.placeholder = "Buscar áudios"
+        return sc
+    }()
+    
     lazy var selectButtonItem: UIBarButtonItem = {
        return UIBarButtonItem(title: "Selecionar",
                               style: .plain,
@@ -73,6 +82,9 @@ class ConsultationListVC: UIViewController {
     }
     var consultation: ConsultationModel?
     var rows: [ConsultationModel] = []
+    
+    private var isSelecting = false
+    private var selectedIndexPaths: Set<IndexPath> = []
 
     // MARK: Init
     override func viewDidLoad() {
@@ -94,6 +106,11 @@ class ConsultationListVC: UIViewController {
         navigationItem.rightBarButtonItems = [selectButtonItem, searchButtonItem]
         
         view.backgroundColor = .secondarySystemBackground
+        
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
+        definesPresentationContext = true
+        
         buildContent()
     }
     
@@ -103,6 +120,15 @@ class ConsultationListVC: UIViewController {
 
     func getConsultation(by indexPath: IndexPath) -> ConsultationModel {
         return rows[indexPath.row]
+    }
+    
+    func deselectAll() {
+        for indexPath in selectedIndexPaths {
+            tableView.deselectRow(at: indexPath, animated: false)
+            tableView.cellForRow(at: indexPath)?.accessoryType = .none
+        }
+        
+        selectedIndexPaths.removeAll()
     }
 }
 
@@ -133,15 +159,23 @@ extension ConsultationListVC: ViewCodeProtocol {
 
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.consultation = self.getConsultation(by: indexPath)
-        
-        let viewController = AnalysisViewController()
-        viewController.consultation = consultation
-        changeScreen(to: viewController)
-        
-        tableView.deselectRow(at: indexPath, animated: true)
+        if isSelecting {
+            if selectedIndexPaths.contains(indexPath) {
+                selectedIndexPaths.remove(indexPath)
+                tableView.cellForRow(at: indexPath)?.accessoryType = .none
+            } else {
+                selectedIndexPaths.insert(indexPath)
+                tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+            }
+            tableView.deselectRow(at: indexPath, animated: true)
+        } else {
+            tableView.deselectRow(at: indexPath, animated: true)
+            self.consultation = self.getConsultation(by: indexPath)
+            let viewController = AnalysisViewController()
+            viewController.consultation = consultation
+            changeScreen(to: viewController)
+        }
     }
-
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, complete in
@@ -165,6 +199,7 @@ extension ConsultationListVC: UITableViewDelegate {
         
         if let cell = tableView.cellForRow(at: indexPath) as? CustomCell {
             cell.applyRoundedCorners(at: indexPath, totalRows: rows.count)
+            cell.accessoryType = selectedIndexPaths.contains(indexPath) ? .checkmark : .none
         }
     }
 }
@@ -205,13 +240,41 @@ extension ConsultationListVC: UITableViewDataSource {
     }
 }
 
+extension ConsultationListVC: UISearchResultsUpdating, UISearchBarDelegate {
+    func updateSearchResults(for searchController: UISearchController) {
+        guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
+            rows = consultations
+            tableView.reloadData()
+            return
+        }
+
+        rows = consultations.filter { consultation in
+            consultation.title.lowercased().contains(searchText.lowercased())
+        }
+
+        tableView.reloadData()
+    }
+}
+
 extension ConsultationListVC {
     @objc func searchButtonTapped() {
-        print("Search botão pressionado")
+        searchController.isActive = true
     }
     
     @objc func selectButtonTapped() {
-        print("Selecionar botão pressionado")
+        isSelecting.toggle()
+        tableView.allowsMultipleSelection = isSelecting
+        deselectAll()
+        
+        tableView.reloadData()
+            
+        selectButtonItem.title = isSelecting ? "Cancelar" : "Selecionar"
+            
+        if isSelecting {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(deleteSelectedItems))
+        } else {
+            navigationItem.leftBarButtonItem = nil
+        }
     }
     
     @objc func buttonTapped() {
@@ -226,4 +289,18 @@ extension ConsultationListVC {
             changeScreen(to: viewController)
         }
     }
+    
+    @objc private func deleteSelectedItems() {
+        let selectedIds = selectedIndexPaths.map { getConsultation(by: $0).id }
+        for id in selectedIds {
+            _ = Persistence.shared.deleteConsultation(by: id)
+        }
+        
+        deselectAll()
+        
+        consultations = Persistence.shared.getAllConsultations()
+        
+        selectButtonTapped()
+    }
+
 }
