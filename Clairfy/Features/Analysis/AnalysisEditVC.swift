@@ -179,10 +179,6 @@ extension AnalysisEditViewController: UITextViewDelegate {
         
         let newText = currentText.replacingCharacters(in: range, with: text)
         
-        return newText.count <= 360
-    }
-
-    func textViewDidEndEditing(_ textView: UITextView) {
-        print(textView.text ?? "")
+        return newText.count <= 500
     }
 }
