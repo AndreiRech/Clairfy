@@ -15,6 +15,7 @@ class AudioRecordManager {
     var recordings: [URL] = []
     var audioID: UUID?
     var voiceRecordVC: VoiceRecordingViewController
+    var waveformView = AudioWaveformView()
     
     init(voiceRecordVC: VoiceRecordingViewController) {
         self.voiceRecordVC = voiceRecordVC
@@ -228,6 +229,7 @@ class AudioRecordManager {
             print("Erro ao criar URL para o áudio.")
             return
         }
+        waveformView.configure(with: audioURL, color: .clairBlue)
         
         let audio = AudioFileModel(id: UUID(), audioPath: audioURL.lastPathComponent)
         audioID = audio.id

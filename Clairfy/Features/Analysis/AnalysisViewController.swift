@@ -60,6 +60,8 @@ class AnalysisViewController: UIViewController {
             
         // Configurar ações
         component.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+        //component.soundWaveImageView.configure(with: consultation?.audio?.audioPath, color: .clairBlue)
+        
             
         return component
     }()
@@ -128,6 +130,11 @@ class AnalysisViewController: UIViewController {
             doctorView.consultation = consultation
             patientView.consultation = consultation
             audioComponent.audioPath = consultation?.audio?.audioPath
+            guard let audioPath = consultation?.audio?.audioPath else { return }
+            let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let url = documents.appendingPathComponent(audioPath)
+            
+            audioComponent.soundWaveImageView.configure(with: url, color: .clairBlue)
             updateUI()
             analysisGenerated = consultation?.transcription != nil
         }

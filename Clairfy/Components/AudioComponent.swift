@@ -11,12 +11,12 @@ class AudioComponent: UIView {
         return view
     }()
     
-    private lazy var soundWaveImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.image = .soundWave
-        return imageView
+    lazy var soundWaveImageView: AudioWaveformView = {
+        let waveformView = AudioWaveformView()
+        waveformView.translatesAutoresizingMaskIntoConstraints = false
+        waveformView.layer.cornerRadius = 8
+        waveformView.clipsToBounds = true
+        return waveformView
     }()
 
     private lazy var audioTitleLabel: UILabel = {
