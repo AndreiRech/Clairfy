@@ -1,14 +1,6 @@
-//
-//  aham.swift
-//  Clairfy
-//
-//  Created by Bernardo Garcia Fensterseifer on 23/06/25.
-//
-
 import Foundation
 
 struct APIKeyManager {
-    
     static func getAPIKey() -> String {
         return loadTextFile(named: "apiKey.txt") ?? ""
     }
