@@ -110,6 +110,12 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        recorder.resetRecording()
+        recorder.disableButtonInteraction()
+    }
 
     
     var startingRecording: Bool = false
