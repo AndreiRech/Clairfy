@@ -1,18 +1,8 @@
-//
-//  AnalysisViewController.swift
-//  Clairfy
-//
-//  Created by Bernardo Garcia Fensterseifer on 12/06/25.
-//
-
 import AVFoundation
 import UIKit
 
 class AnalysisViewController: UIViewController {
-    
-    // MARK: - variaveis e pa (desculpa pelo informalismo, mas quero que fique claro)
-    
-    // será arrumado esse componente depois...
+    // MARK: SubViews
     internal lazy var generateAnalysisButton: GlassButton = {
         let button = GlassButton()
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -55,10 +45,8 @@ class AnalysisViewController: UIViewController {
         component.translatesAutoresizingMaskIntoConstraints = false
         component.title = consultation?.title
         component.date = consultation?.date.formatDate()
-        component.duration = "00:48:14" //arrumar tmb, mas achoq nn tem como
+        component.duration = "00:48:14"
         component.audioPath = consultation?.audio?.audioPath
-            
-        // Configurar ações
         component.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
             
         return component
@@ -93,20 +81,6 @@ class AnalysisViewController: UIViewController {
         return control
     }()
     
-    // MARK: - métodos e pa
-    internal func updateContentVisibility() {
-        UIView.animate(withDuration: 0.3) {
-            let visible = self.analysisGenerated
-            self.doctorView.contentStackView.isHidden = !visible
-            
-            if self.segmentedControl.selectedSegmentIndex == 0 {
-                self.patientView.isHidden = true
-            } else {
-                self.patientView.isHidden = false
-            }
-        }
-    }
-    
     lazy var doctorView: DoctorAnalysisView = {
         let view = DoctorAnalysisView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -119,6 +93,7 @@ class AnalysisViewController: UIViewController {
         let view = PatientAnalysisView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.consultation = consultation
+        view.delegate = self
         return view
     }()
     
@@ -132,11 +107,30 @@ class AnalysisViewController: UIViewController {
             analysisGenerated = consultation?.transcription != nil
         }
     }
+    
+    // MARK: Init
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setup()
+        additionalSetup()
+    }
+    
+    // MARK: Functions
+    private func additionalSetup() {
+        view.backgroundColor = .secondarySystemBackground
+        navigationItem.title = "Análise"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        segmentedControlValueChanged(segmentedControl)
         
+        setConsultationTime()
+        updateContent()
+    }
+    
     internal func updateUI() {
         doctorView.clinicalSummary.text = consultation?.transcription?.summary ?? "Nenhum resumo disponível"
-        doctorView.actionPoints.text = consultation?.transcription?.actionPoints.joined(separator: "\n\n") ?? "Nenhum ponto de ação disponível"
+        doctorView.keyWords.text = consultation?.transcription?.keyWords.joined(separator: "\n\n") ?? "Nenhuma palavra-chave disponível"
         patientView.patientSummary.text = consultation?.transcription?.didctarized ?? "Nenhum resumo disponível"
+        patientView.actionPoints.text = consultation?.transcription?.actionPoints.joined(separator: "\n\n") ?? "Nenhum ponto de ação disponível"
     }
         
     internal func updateLoadingState() {
@@ -147,22 +141,17 @@ class AnalysisViewController: UIViewController {
         patientView.isHidden = isLoading
     }
     
-    // MARK: - main e pa
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setup()
-        additionalSetup()
-        updateContent()
-    }
-    
-    // MARK: Setup
-    private func additionalSetup() {
-        view.backgroundColor = .secondarySystemBackground
-        navigationItem.title = "Análise"
-        navigationController?.navigationBar.prefersLargeTitles = true
-        segmentedControlValueChanged(segmentedControl)
-        
-        setConsultationTime()
+    internal func updateContentVisibility() {
+        UIView.animate(withDuration: 0.3) {
+            let visible = self.analysisGenerated
+            self.doctorView.contentStackView.isHidden = !visible
+            
+            if self.segmentedControl.selectedSegmentIndex == 0 {
+                self.patientView.isHidden = true
+            } else {
+                self.patientView.isHidden = false
+            }
+        }
     }
     
     private func setConsultationTime() {
@@ -199,11 +188,29 @@ class AnalysisViewController: UIViewController {
         self.consultation = updatedConsultation
     }
     
+    func didTapEdit(category: TranscriptionEnum, transcriptionID: UUID?) {
+        let editVC = AnalysisEditViewController()
+        editVC.transcriptionID = transcriptionID
+        editVC.category = category
+        editVC.delegate = self
+
+        let navController = UINavigationController(rootViewController: editVC)
+                
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        self.present(navController, animated: true)
+    }
+    
+    func didFinishEditing() {
+        updateContent()
+    }
  }
     
 // MARK: - ViewCodeProtocol
 extension AnalysisViewController: ViewCodeProtocol {
-    
     func addSubViews() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -238,26 +245,4 @@ extension AnalysisViewController: ViewCodeProtocol {
         ])
     }
 
-}
-
-extension AnalysisViewController: AnalysisProtocol {
-    func didTapEdit(category: TranscriptionEnum, transcriptionID: UUID?) {
-        let editVC = AnalysisEditViewController()
-        editVC.transcriptionID = transcriptionID
-        editVC.category = category
-        editVC.delegate = self
-
-        let navController = UINavigationController(rootViewController: editVC)
-                
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        self.present(navController, animated: true)
-    }
-    
-    func didFinishEditing() {
-        updateContent()
-    }
 }

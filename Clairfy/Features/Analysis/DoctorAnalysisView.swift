@@ -9,13 +9,12 @@ import AVFoundation
 import UIKit
 
 class DoctorAnalysisView: UIView {
-    
     // MARK: - Properties
     var consultation: ConsultationModel?
     weak var delegate: AnalysisViewController?
+    var tempoDeRespostaAPI: Bool = false
     
     // MARK: - UI Components
-    // será arrumado esse componente depois...
     internal lazy var clinicalSummary: TextComponent = {
         let textComponent = TextComponent()
         textComponent.translatesAutoresizingMaskIntoConstraints = false
@@ -38,11 +37,10 @@ class DoctorAnalysisView: UIView {
         return textComponent
     }()
     
-    // será arrumado esse componente depois...
-    internal lazy var actionPoints: TextComponent = {
+    internal lazy var keyWords: TextComponent = {
         let textComponent = TextComponent()
         textComponent.translatesAutoresizingMaskIntoConstraints = false
-        textComponent.title = "Pontos de Ação"
+        textComponent.title = "Palavras Chave"
         
         textComponent.editButtonText = "Editar"
         textComponent.editButtonImage = UIImage(systemName: "pencil")
@@ -61,7 +59,7 @@ class DoctorAnalysisView: UIView {
     }()
 
     internal lazy var contentStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [clinicalSummary, actionPoints])
+        let stackView = UIStackView(arrangedSubviews: [clinicalSummary, keyWords])
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
         stackView.spacing = 24
@@ -69,20 +67,23 @@ class DoctorAnalysisView: UIView {
         return stackView
     }()
     
-    // MARK: - Initialization
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupViews()
+        setup()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: - Private Methods
-    private func setupViews() {
+}
+
+extension DoctorAnalysisView: ViewCodeProtocol {
+    func addSubViews() {
         addSubview(contentStackView)
-        
+    }
+    
+    func setupConstraints() {
         NSLayoutConstraint.activate([
             contentStackView.topAnchor.constraint(equalTo: topAnchor),
             contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -90,15 +91,16 @@ class DoctorAnalysisView: UIView {
             contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
-     
-    // MARK: - Button Actions
+}
+
+extension DoctorAnalysisView {
     @objc private func editButtonTapped(_ sender: UIButton) {
         guard let transcriptionID = self.consultation?.transcription?.id else { return }
 
         if sender == clinicalSummary.editButton {
             delegate?.didTapEdit(category: .summary, transcriptionID: transcriptionID)
-        } else if sender == actionPoints.editButton {
-            delegate?.didTapEdit(category: .actionPoints, transcriptionID: transcriptionID)
+        } else if sender == keyWords.editButton {
+            delegate?.didTapEdit(category: .keyWords, transcriptionID: transcriptionID)
         } else {
             print("❌ Botão desconhecido")
         }
@@ -110,18 +112,15 @@ class DoctorAnalysisView: UIView {
         var text: String = ""
         if sender == clinicalSummary.editButton {
             text = transcription.summary
-        } else if sender == actionPoints.editButton {
-            text = transcription.actionPoints.joined(separator: "\n\n")
+        } else if sender == keyWords.editButton {
+            text = transcription.keyWords.joined(separator: "\n\n")
         } else { }
 
         let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
             
         if let viewController = self.delegate {
-            activityVC.popoverPresentationController?.sourceView = viewController.view                
+            activityVC.popoverPresentationController?.sourceView = viewController.view
             viewController.present(activityVC, animated: true, completion: nil)
         }
     }
-    
-    var tempoDeRespostaAPI: Bool = false
-    
 }
