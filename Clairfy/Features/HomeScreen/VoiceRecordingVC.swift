@@ -11,6 +11,14 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return imageView
     }()
     
+    lazy var recordingTapArea: UIButton = {
+        let button = UIButton(type: .custom)
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(handleRecordingImageTap), for: .touchUpInside)
+        return button
+    }()
+    
     lazy var timerLabel: UILabel = {
         var label = UILabel()
         label.text = "00:00:00"
@@ -39,9 +47,8 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         button.backgroundColor = .clairBlue
         button.translatesAutoresizingMaskIntoConstraints = false
 
-        /// Força o cálculo do layout
         DispatchQueue.main.async {
-            let iconSize = button.bounds.width * 0.4 // 40% do tamanho do botão
+            let iconSize = button.bounds.width * 0.4
             let symbolConfig = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .heavy)
             let playImage = UIImage(systemName: "stop.fill", withConfiguration: symbolConfig)
             button.setImage(playImage, for: .normal)
@@ -57,14 +64,13 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     lazy var deleteAudioButton: UIButton = {
         var button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 28 // metade do tamanho faz um círculo!
+        button.layer.cornerRadius = 28
         button.layer.masksToBounds = true
         button.backgroundColor = .label
         button.tintColor = .systemBackground
         
-        /// Força o cálculo do layout
         DispatchQueue.main.async {
-            let iconSize = button.bounds.width * 0.5 // 50% do tamanho do botão
+            let iconSize = button.bounds.width * 0.5
             let symbolConfig = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .heavy)
             let playImage = UIImage(systemName: "trash.fill", withConfiguration: symbolConfig)
             button.setImage(playImage, for: .normal)
@@ -76,14 +82,13 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     lazy var finishedAudioButton: UIButton = {
         var button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 28 // metade do tamanho faz um círculo!
+        button.layer.cornerRadius = 28
         button.layer.masksToBounds = true
         button.backgroundColor = .label
         button.tintColor = .systemBackground
         
-        /// Força o cálculo do layout
         DispatchQueue.main.async {
-            let iconSize = button.bounds.width * 0.5 // 50% do tamanho do botão
+            let iconSize = button.bounds.width * 0.5
             let symbolConfig = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .heavy)
             let playImage = UIImage(systemName: "checkmark", withConfiguration: symbolConfig)
             button.setImage(playImage, for: .normal)
@@ -103,25 +108,27 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
     }()
     
     // MARK: Proprieties
+    var startingRecording: Bool = false
+    
     private lazy var recorder: AudioRecordManager = {
         return AudioRecordManager(voiceRecordVC: self)
     }()
    
+    // MARK: Init
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
-
     
-    var startingRecording: Bool = false
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        recorder.resetRecording()
+        recorder.disableButtonInteraction()
+    }
     
-    // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
         additionalSetup()
-        visualizerView.drawVisualizerCircles()
-        recorder.audioMeteringDelegate = visualizerView
-        
     }
     
     // MARK: Functions
@@ -131,6 +138,9 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
                 
         setupButtonActions()
         recorder.updateTimerLabel()
+        
+        visualizerView.drawVisualizerCircles()
+        recorder.audioMeteringDelegate = visualizerView
         
         navigationController?.navigationBar.prefersLargeTitles = false
         
@@ -142,9 +152,9 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
 }
 
 extension VoiceRecordingViewController: ViewCodeProtocol {
-    
     func addSubViews() {
         view.addSubview(recordingImage)
+        view.addSubview(recordingTapArea)
         view.addSubview(timerLabel)
         view.addSubview(visualizerView)
         view.addSubview(buttonsStackView)
@@ -152,23 +162,28 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            /// recordingImage constraints
+            
+            
+            
             recordingImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             recordingImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            recordingImage.widthAnchor.constraint(equalToConstant: 328),
+            recordingImage.heightAnchor.constraint(equalToConstant: 328),
             
-            /// timerLabel constraints
+            recordingTapArea.topAnchor.constraint(equalTo: recordingImage.topAnchor),
+            
+            recordingTapArea.bottomAnchor.constraint(equalTo: recordingImage.bottomAnchor),
+            recordingTapArea.leadingAnchor.constraint(equalTo: recordingImage.leadingAnchor),
+            recordingTapArea.trailingAnchor.constraint(equalTo: recordingImage.trailingAnchor),
+            
             timerLabel.topAnchor.constraint(equalTo: recordingImage.bottomAnchor, constant: 40),
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            /// soundWaveImage constraints
-//            soundWaveImage.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
-//            soundWaveImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             visualizerView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
-               visualizerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-               visualizerView.heightAnchor.constraint(equalToConstant: 100),
-               visualizerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            visualizerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            visualizerView.heightAnchor.constraint(equalToConstant: 100),
+            visualizerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             
-            /// buttonsStackView constraints
             buttonsStackView.topAnchor.constraint(equalTo: visualizerView.bottomAnchor, constant: 40),
             buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
@@ -193,8 +208,8 @@ extension VoiceRecordingViewController {
     }
    
     private func toggleWaveform(visible: Bool) {
-            visualizerView.removeVisualizerCircles()
-            visualizerView.isHidden = false
+        visualizerView.removeVisualizerCircles()
+        visualizerView.isHidden = false
     }
     
     @objc func deleteButtonTapped() {
@@ -232,25 +247,29 @@ extension VoiceRecordingViewController {
         }
     }
     
-    // Função para iniciar/parar a animação
     @objc func toggleRecordingAnimation() {
-            if recorder.recordingState == .recording {
-                recorder.startRecordingAnimation()
-            } else {
-                recorder.stopRecordingAnimation()
-            }
-            recorder.audioRecorder?.stop()
-            recorder.audioRecorder = nil
-            
-            do {
-                try AVAudioSession.sharedInstance().setActive(false)
-            } catch {
-                print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
-            }
+        if recorder.recordingState == .recording {
+            recorder.startRecordingAnimation()
+        } else {
+            recorder.stopRecordingAnimation()
         }
+        recorder.audioRecorder?.stop()
+        recorder.audioRecorder = nil
+            
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("Erro ao desativar sessão de áudio: \(error.localizedDescription)")
+        }
+    }
     
     @objc func updateTimer() {
         recorder.elapsedTime += 0.01
         recorder.updateTimerLabel()
+    }
+    
+    
+    @objc func handleRecordingImageTap() {
+        recordButtonTapped()
     }
 }

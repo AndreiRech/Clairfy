@@ -40,7 +40,6 @@ class AnalysisEditViewController: UIViewController {
         textField.textColor = .label
         textField.text = "Insira seu título"
         textField.backgroundColor = .secondarySystemBackground
-        textField.delegate = self
         return textField
     }()
     
@@ -170,19 +169,5 @@ extension AnalysisEditViewController {
         saveTranscription()
         delegate?.didFinishEditing()
         dismiss(animated: true)
-    }
-}
-
-extension AnalysisEditViewController: UITextViewDelegate {
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        guard let currentText = textView.text as NSString? else { return true }
-        
-        let newText = currentText.replacingCharacters(in: range, with: text)
-        
-        return newText.count <= 360
-    }
-
-    func textViewDidEndEditing(_ textView: UITextView) {
-        print(textView.text ?? "")
     }
 }

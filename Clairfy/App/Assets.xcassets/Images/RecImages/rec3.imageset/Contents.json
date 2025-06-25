@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Property 1=Variant4-2.png",
+      "filename" : "rec3LightNew.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -12,7 +12,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Property 1=Variant4-3.png",
+      "filename" : "rec3New.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -48,5 +48,8 @@
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "compression-type" : "gpu-optimized-best"
   }
 }

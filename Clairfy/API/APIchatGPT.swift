@@ -1,7 +1,7 @@
 import Foundation
 
 class APIchatGPT {
-    private let apiKey = "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"
+    private let apiKey = APIKeyManager.getAPIKey()
 
        // MARK: - Transcrição de áudio
        func transcreverAudio(audioFileURL: URL, completion: @escaping (String?) -> Void) {
@@ -36,7 +36,6 @@ class APIchatGPT {
                completion(text)
            }.resume()
        }
-
       
     func resumirTexto(_ texto: String, type: String, completion: @escaping (String?) -> Void) {
         let prompt = type == "doctor" ? Prompts.doctor : Prompts.patient
