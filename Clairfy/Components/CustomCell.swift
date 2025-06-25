@@ -41,10 +41,23 @@ class CustomCell: UITableViewCell {
         return stack
     }()
     
+    lazy var bottomLine: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.lightGray // cor da linha
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = false
+        view.backgroundColor = .separator
+        return view
+    }()
+    
     // MARK: Functions
     func configure(titleText: String, timerText: String) {
         title.text = titleText
         timer.text = timerText
+    }
+    
+    func hideBottomLine() {
+        bottomLine.isHidden = true
     }
     
     // MARK: Init
@@ -62,6 +75,7 @@ extension CustomCell: ViewCodeProtocol {
     func addSubViews() {
         contentView.addSubview(textStack)
         contentView.addSubview(image)
+        contentView.addSubview(bottomLine)
     }
     
     func setupConstraints() {
@@ -73,7 +87,12 @@ extension CustomCell: ViewCodeProtocol {
             image.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             image.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             image.widthAnchor.constraint(equalToConstant: 10),
-            image.heightAnchor.constraint(equalToConstant: 16)
+            image.heightAnchor.constraint(equalToConstant: 16),
+            
+            bottomLine.heightAnchor.constraint(equalToConstant: 0.5),
+            bottomLine.leadingAnchor.constraint(equalTo: textStack.leadingAnchor),
+            bottomLine.trailingAnchor.constraint(equalTo: image.trailingAnchor),
+            bottomLine.bottomAnchor.constraint(equalTo: textStack.bottomAnchor, constant: 7)
         ])
     }
 }
