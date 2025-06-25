@@ -5,6 +5,16 @@ final class Persistence: PersistenceProtocol {
     static var shared = Persistence()
 
     var context: NSManagedObjectContext?
+    
+    private static let firstTimeKey = "firstTime"
+    
+    static func isFirstTime() -> Bool {
+        return UserDefaults.standard.bool(forKey: firstTimeKey) == false
+    }
+        
+    static func setFirstTimeDone() {
+        UserDefaults.standard.set(true, forKey: firstTimeKey)
+    }
 
     func createAudio(_ audio: AudioFileModel) {
         guard let context else { return }

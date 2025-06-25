@@ -82,6 +82,7 @@ class ConsultationListVC: UIViewController {
     }
     var consultation: ConsultationModel?
     var rows: [ConsultationModel] = []
+    var firstTime: Bool = false
     
     private var isSelecting = false
     private var selectedIndexPaths: Set<IndexPath> = []
@@ -110,6 +111,9 @@ class ConsultationListVC: UIViewController {
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
+        
+        navigationItem.hidesBackButton = firstTime
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = !firstTime
         
         buildContent()
     }

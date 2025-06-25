@@ -217,7 +217,7 @@ class AudioRecordManager {
         changeScreen()
     }
     
-     func changeScreen() {
+     private func changeScreen() {
         let renameVC = RenameViewController()
         renameVC.audioID = self.audioID
         
