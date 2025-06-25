@@ -119,6 +119,41 @@ class AnalysisViewController: UIViewController {
         super.viewDidLoad()
         setup()
         additionalSetup()
+        setupLongPressGesture() // 👈 novo método
+    }
+
+    private func setupLongPressGesture() {
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressOnAudioComponent(_:)))
+        audioComponent.addGestureRecognizer(longPress)
+    }
+
+    
+    @objc private func handleLongPressOnAudioComponent(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+
+        let alert = UIAlertController(
+            title: "Renomear Áudio",
+            message: "Digite o novo nome do áudio:",
+            preferredStyle: .alert
+        )
+
+        alert.addTextField { textField in
+            textField.text = self.audioComponent.title
+            textField.placeholder = "Novo nome"
+        }
+
+        let renameAction = UIAlertAction(title: "Renomear", style: .default) { _ in
+            if let newName = alert.textFields?.first?.text, !newName.isEmpty {
+                self.renameAudio(name: newName)
+            }
+        }
+
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel)
+
+        alert.addAction(renameAction)
+        alert.addAction(cancelAction)
+
+        present(alert, animated: true)
     }
 
     // MARK: Functions
@@ -134,12 +169,26 @@ class AnalysisViewController: UIViewController {
         // Garantir target do botão play
         audioComponent.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
     }
+    
+    private func renameAudio(name: String) {
+        guard let consultation = self.consultation else { return }
+        
+        self.audioComponent.title = name
+        let id = consultation.id
+        
+        let consultationModel = ConsultationModel(id: id, title: name, date: consultation.date, audio: consultation.audio, transcription: consultation.transcription)
+
+        _ = Persistence.shared.updateConsultation(consultationModel, transcription: consultation.transcription, audio: consultation.audio)
+        
+        self.consultation = Persistence.shared.getConsultation(by: consultation.id)
+    }
 
     internal func updateUI() {
         doctorView.clinicalSummary.text = consultation?.transcription?.summary ?? "Nenhum resumo disponível"
         doctorView.keyWords.text = consultation?.transcription?.keyWords.joined(separator: "\n\n") ?? "Nenhuma palavra-chave disponível"
         patientView.patientSummary.text = consultation?.transcription?.didctarized ?? "Nenhum resumo disponível"
         patientView.actionPoints.text = consultation?.transcription?.actionPoints.joined(separator: "\n\n") ?? "Nenhum ponto de ação disponível"
+        audioComponent.title = consultation?.title
     }
 
     internal func updateLoadingState() {
