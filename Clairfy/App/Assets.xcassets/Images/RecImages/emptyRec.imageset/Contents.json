@@ -1,7 +1,8 @@
 {
   "images" : [
     {
-      "filename" : "Property 1=Default-2.png",
+      "compression-type" : "gpu-optimized-best",
+      "filename" : "recEmptyLightNew.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -12,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Property 1=Default.png",
+      "filename" : "recEmptyNew 1.png",
       "idiom" : "universal",
       "scale" : "1x"
     },

@@ -11,6 +11,14 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return imageView
     }()
     
+    lazy var recordingTapArea: UIButton = {
+        let button = UIButton(type: .custom)
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(handleRecordingImageTap), for: .touchUpInside)
+        return button
+    }()
+    
     lazy var timerLabel: UILabel = {
         var label = UILabel()
         label.text = "00:00:00"
@@ -146,6 +154,7 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
 extension VoiceRecordingViewController: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(recordingImage)
+        view.addSubview(recordingTapArea)
         view.addSubview(timerLabel)
         view.addSubview(visualizerView)
         view.addSubview(buttonsStackView)
@@ -153,8 +162,19 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
+            
+            
+            
             recordingImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             recordingImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            recordingImage.widthAnchor.constraint(equalToConstant: 328),
+            recordingImage.heightAnchor.constraint(equalToConstant: 328),
+            
+            recordingTapArea.topAnchor.constraint(equalTo: recordingImage.topAnchor),
+            
+            recordingTapArea.bottomAnchor.constraint(equalTo: recordingImage.bottomAnchor),
+            recordingTapArea.leadingAnchor.constraint(equalTo: recordingImage.leadingAnchor),
+            recordingTapArea.trailingAnchor.constraint(equalTo: recordingImage.trailingAnchor),
             
             timerLabel.topAnchor.constraint(equalTo: recordingImage.bottomAnchor, constant: 40),
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -246,5 +266,10 @@ extension VoiceRecordingViewController {
     @objc func updateTimer() {
         recorder.elapsedTime += 0.01
         recorder.updateTimerLabel()
+    }
+    
+    
+    @objc func handleRecordingImageTap() {
+        recordButtonTapped()
     }
 }
