@@ -16,6 +16,7 @@ class AudioRecordManager {
     var recordings: [URL] = []
     var audioID: UUID?
     var voiceRecordVC: VoiceRecordingViewController
+    var waveformView = AudioWaveformView()
     
     weak var audioMeteringDelegate: AudioMeteringProtocol? {
         get { objc_getAssociatedObject(self, &Metering.delegate) as? AudioMeteringProtocol }
@@ -92,6 +93,11 @@ class AudioRecordManager {
         timer = nil
         stopRecordingAnimation()
     }
+    
+//    func pauseAudio() {
+//        audioPlayer?.pause()
+//        displayLink?.invalidate()
+//    }
         
     func stopRecording() {
         self.stopWaveformMetering()
@@ -237,6 +243,7 @@ class AudioRecordManager {
             print("Erro ao criar URL para o áudio.")
             return
         }
+        waveformView.configure(with: audioURL, color: .clairBlue)
         
         let audio = AudioFileModel(id: UUID(), audioPath: audioURL.lastPathComponent)
         audioID = audio.id

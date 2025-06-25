@@ -8,6 +8,8 @@ class AnalysisViewController: UIViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.text = "Gerar Análise"
         button.font = Fonts.title1
+        button.cornerRadius = 24
+        
         button.addTarget(self, action: #selector(gerarAnalise), for: .touchUpInside)
         return button
     }()
@@ -94,6 +96,12 @@ class AnalysisViewController: UIViewController {
             doctorView.consultation = consultation
             patientView.consultation = consultation
             audioComponent.audioPath = consultation?.audio?.audioPath
+            
+            guard let audioPath = consultation?.audio?.audioPath else { return }
+            let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let url = documents.appendingPathComponent(audioPath)
+
+            audioComponent.soundWaveImageView.configure(with: url, color: .clairBlue)
             updateUI()
             analysisGenerated = consultation?.transcription != nil
         }
@@ -106,6 +114,11 @@ class AnalysisViewController: UIViewController {
         additionalSetup()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        audioComponent.stopAudio()
+    }
+    
     // MARK: Functions
     private func additionalSetup() {
         view.backgroundColor = .secondarySystemBackground
@@ -115,6 +128,27 @@ class AnalysisViewController: UIViewController {
         
         setConsultationTime()
         updateContent()
+        setupLongPressGesture()
+        
+        audioComponent.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+    }
+    
+    private func renameAudio(name: String) {
+        guard let consultation = self.consultation else { return }
+        
+        self.audioComponent.title = name
+        let id = consultation.id
+        
+        let consultationModel = ConsultationModel(id: id, title: name, date: consultation.date, audio: consultation.audio, transcription: consultation.transcription)
+
+        _ = Persistence.shared.updateConsultation(consultationModel, transcription: consultation.transcription, audio: consultation.audio)
+        
+        self.consultation = Persistence.shared.getConsultation(by: consultation.id)
+    }
+    
+    private func setupLongPressGesture() {
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressOnAudioComponent(_:)))
+        audioComponent.addGestureRecognizer(longPress)
     }
     
     internal func updateUI() {
@@ -122,6 +156,7 @@ class AnalysisViewController: UIViewController {
         doctorView.keyWords.text = consultation?.transcription?.keyWords.joined(separator: "\n\n") ?? "Nenhuma palavra-chave disponível"
         patientView.patientSummary.text = consultation?.transcription?.didctarized ?? "Nenhum resumo disponível"
         patientView.actionPoints.text = consultation?.transcription?.actionPoints.joined(separator: "\n\n") ?? "Nenhum ponto de ação disponível"
+        audioComponent.title = consultation?.title
     }
         
     internal func updateLoadingState() {
@@ -200,7 +235,6 @@ class AnalysisViewController: UIViewController {
     }
  }
     
-// MARK: - ViewCodeProtocol
 extension AnalysisViewController: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(scrollView)
@@ -231,8 +265,8 @@ extension AnalysisViewController: ViewCodeProtocol {
             // Botão fixo no final da tela
             generateAnalysisButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             generateAnalysisButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            generateAnalysisButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            generateAnalysisButton.heightAnchor.constraint(equalToConstant: 54)
+            generateAnalysisButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            generateAnalysisButton.heightAnchor.constraint(equalToConstant: 66)
         ])
     }
 
@@ -241,14 +275,12 @@ extension AnalysisViewController: ViewCodeProtocol {
 extension AnalysisViewController: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         audioComponent.playButtonState = .play
-        isPlaying = false
-        print("✅ Áudio terminou de tocar")
+        audioComponent.resetWaveformProgress()
     }
 }
 
 extension AnalysisViewController {
     @objc internal func gerarAnalise() {
-        print(123)
         guard let audioPath = consultation?.audio?.audioPath else {
             print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")
             return
@@ -396,17 +428,11 @@ extension AnalysisViewController {
     }
     
     @objc internal func playButtonTapped() {
-        if let player = audioPlayer {
-            if player.isPlaying {
-                player.pause()
+        if audioComponent.audioPlayer?.isPlaying == true {
+                audioComponent.pauseAudio()
                 audioComponent.playButtonState = .play
                 print("⏸ Áudio pausado")
-            } else {
-                player.play()
-                audioComponent.playButtonState = .pause
-                print("▶️ Áudio retomado")
-            }
-            return
+                return
         }
 
         guard let fileName = consultation?.audio?.audioPath else { return }
@@ -429,16 +455,14 @@ extension AnalysisViewController {
             print("❌ Erro ao configurar AVAudioSession:", error)
         }
 
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
+        // Reseta o progresso da waveform antes de tocar novamente
+            audioComponent.soundWaveImageView.resetWaveformProgress()
+
+            // Configura e toca via AudioComponent (centraliza tudo lá)
+            audioComponent.preparePlayback(with: url)
+            audioComponent.playAudio()
             audioComponent.playButtonState = .pause
-            print("🎵 Tocando áudio: \(url.path)")
-        } catch {
-            print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
-        }
+            print("▶️ Áudio iniciado via AudioComponent")
     }
 
     @objc internal func trashButtonTapped() {
@@ -449,10 +473,39 @@ extension AnalysisViewController {
         print("Share button tapped")
     }
     
-    enum PlayButtonState {
-        case play
-        case pause
+    @objc private func handleLongPressOnAudioComponent(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+
+        let alert = UIAlertController(
+            title: "Renomear Áudio",
+            message: "Digite o novo nome do áudio:",
+            preferredStyle: .alert
+        )
+
+        alert.addTextField { textField in
+            textField.text = self.audioComponent.title
+            textField.placeholder = "Novo nome"
+        }
+
+        let renameAction = UIAlertAction(title: "Renomear", style: .default) { _ in
+            if let newName = alert.textFields?.first?.text, !newName.isEmpty {
+                self.renameAudio(name: newName)
+            }
+        }
+
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel)
+
+        alert.addAction(renameAction)
+        alert.addAction(cancelAction)
+
+        present(alert, animated: true)
     }
-    
 }
 
+extension AnalysisViewController: AudioComponentDelegate {
+    func audioComponentDidFinishPlaying(_ component: AudioComponent) {
+        audioComponent.playButtonState = .play
+        audioComponent.soundWaveImageView.progress = 1.0
+        print("🔁 Áudio finalizado, resetando estado")
+    }
+}

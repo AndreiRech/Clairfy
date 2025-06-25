@@ -7,6 +7,9 @@ class ButtonComponent: UIButton {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .tertiarySystemBackground
         button.setTitleColor(.clairBlue, for: .normal)
+//        button.layer.borderWidth = 1
+        //button.layer.borderColor = UIColor.lightGray.cgColor
+//        button.clipsToBounds = true
         return button
     }()
     

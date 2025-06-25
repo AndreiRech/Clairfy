@@ -98,6 +98,7 @@ class ConsultationListVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.prefersLargeTitles = true
+        consultations = Persistence.shared.getAllConsultations()
     }
     
     // MARK: Functions
