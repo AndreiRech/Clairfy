@@ -1,8 +1,7 @@
 {
   "images" : [
     {
-      "compression-type" : "gpu-optimized-best",
-      "filename" : "recEmptyLightNew.png",
+      "filename" : "Frame 2.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -13,11 +12,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "recEmptyNew 1.png",
+      "filename" : "Frame 1.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "Frame 1@2x 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
@@ -28,10 +28,12 @@
           "value" : "dark"
         }
       ],
+      "filename" : "Frame 1@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "Frame 1@3x 1.png",
       "idiom" : "universal",
       "scale" : "3x"
     },
@@ -42,6 +44,7 @@
           "value" : "dark"
         }
       ],
+      "filename" : "Frame 1@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

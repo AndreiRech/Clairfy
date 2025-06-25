@@ -5,7 +5,6 @@ protocol AudioComponentDelegate: AnyObject {
     func audioComponentDidFinishPlaying(_ component: AudioComponent)
 }
 
-
 class AudioComponent: UIView {
     func resetWaveformProgress() {
         soundWaveImageView.progress = 0.0

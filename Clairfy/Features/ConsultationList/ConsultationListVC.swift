@@ -43,6 +43,7 @@ class ConsultationListVC: UIViewController {
         table.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         table.clipsToBounds = true
         table.showsVerticalScrollIndicator = false
+        table.separatorStyle = .none
         return table
     }()
     
@@ -82,6 +83,7 @@ class ConsultationListVC: UIViewController {
     }
     var consultation: ConsultationModel?
     var rows: [ConsultationModel] = []
+    var firstTime: Bool = false
     
     private var isSelecting = false
     private var selectedIndexPaths: Set<IndexPath> = []
@@ -111,6 +113,9 @@ class ConsultationListVC: UIViewController {
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
+        
+        navigationItem.hidesBackButton = firstTime
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = !firstTime
         
         buildContent()
     }
@@ -157,6 +162,8 @@ extension ConsultationListVC: ViewCodeProtocol {
         ])
     }
 }
+
+// MARK: - Table View
 
 extension ConsultationListVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -205,6 +212,8 @@ extension ConsultationListVC: UITableViewDelegate {
     }
 }
 
+// MARK: - Table View
+
 extension ConsultationListVC: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -226,6 +235,10 @@ extension ConsultationListVC: UITableViewDataSource {
         cell.configure(titleText: consultation.title, timerText: consultation.date.formatDate())
         cell.backgroundColor = .tertiarySystemBackground
         cell.applyRoundedCorners(at: indexPath, totalRows: rows.count)
+        
+        if indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1 {
+            cell.hideBottomLine()
+        }
         
         return cell
     }
