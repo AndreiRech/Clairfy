@@ -1,54 +1,111 @@
-//
-//  AudioWaveformView.swift
-//  POC-waveForm
-//
-//  Created by Bernardo Garcia Fensterseifer on 24/06/25.
-//
-
 import UIKit
 import AVFoundation
 
+protocol AudioWaveformViewDelegate: AnyObject {
+    func waveformView(_ waveformView: AudioWaveformView, didScrubTo progress: CGFloat)
+}
+
 class AudioWaveformView: UIView {
     
-    // MARK: - Properties
-    private var waveformColor: UIColor = .systemBlue
+    weak var delegate: AudioWaveformViewDelegate?
+
+    private var samples: [CGFloat] = []
     
-    // MARK: - Subviews
-    private lazy var imageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
+    var progress: CGFloat = 0.0 {
+        didSet { setNeedsDisplay() }
+    }
+
+    private var activeColor: UIColor = .clairBlue
+    private var inactiveColor: UIColor = .systemGray4
     
-    // MARK: - Init
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
+        backgroundColor = .clear // fundo transparente
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
+        backgroundColor = .clear
     }
     
-    // MARK: - Public Configure
-    func configure(with audioURL: URL, color: UIColor = .systemBlue) {
-        self.waveformColor = color
-        
+    func configure(with audioURL: URL, color: UIColor = .clairBlue) {
+        self.activeColor = color
+        self.progress = 1.0 // começa colorido por padrão
+
         Task {
-            let image = await generateWaveformImage(from: audioURL, color: color, size: self.bounds.size)
+            let (_, samples) = await generateWaveformSamples(from: audioURL, size: self.bounds.size)
             await MainActor.run {
-                self.imageView.image = image
+                self.samples = samples
+                self.setNeedsDisplay()
             }
         }
     }
-    
-    // MARK: - Private Waveform Generator
-    private func generateWaveformImage(from url: URL, color: UIColor, size: CGSize) async -> UIImage? {
-        guard size.width > 0 && size.height > 0 else { return nil }
+
+    func resetWaveformProgress() {
+        progress = 0.0
+        setNeedsDisplay()
+    }
+
+    // MARK: Drawing
+    override func draw(_ rect: CGRect) {
+        guard !samples.isEmpty else { return }
+        guard let ctx = UIGraphicsGetCurrentContext() else { return }
+
+        let barWidth: CGFloat = 3
+        let spacing: CGFloat = 2
+        let height = bounds.height
+        let totalBars = Int(bounds.width / (barWidth + spacing))
+        let samplesPerBar = max(1, samples.count / totalBars)
+
+        for i in 0..<totalBars {
+            let start = i * samplesPerBar
+            let end = min(start + samplesPerBar, samples.count)
+            guard start < end else { continue }
+
+            let slice = samples[start..<end]
+            let avg: CGFloat = slice.reduce(0, +) / CGFloat(slice.count)
+
+            let barHeight = avg * height
+            let x = CGFloat(i) * (barWidth + spacing)
+            let y = (height - barHeight) / 2
+            let barRect = CGRect(x: x, y: y, width: barWidth, height: barHeight)
+            let path = UIBezierPath(roundedRect: barRect, cornerRadius: barWidth / 2)
+
+            let ratio = CGFloat(i) / CGFloat(totalBars)
+            let color = ratio <= progress ? activeColor : inactiveColor
+            color.setFill()
+            path.fill()
+        }
+    }
+
+    // MARK: Touch handling (scrubbing)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        handleTouches(touches)
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        handleTouches(touches)
+    }
+
+    private func handleTouches(_ touches: Set<UITouch>) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let clampedX = max(0, min(location.x, bounds.width))
+        let newProgress = clampedX / bounds.width
+        progress = newProgress
+        delegate?.waveformView(self, didScrubTo: newProgress)
+    }
+
+    // MARK: Waveform generation (simplified)
+    private func generateWaveformSamples(from url: URL, size: CGSize) async -> (UIImage?, [CGFloat]) {
+        // Seu método original para extrair samples, pode manter o código antigo aqui.
+        // Retorna imagem nil, só amostras (samples) para o draw.
+        
+        guard size.width > 0 && size.height > 0 else { return (nil, []) }
         
         let asset = AVURLAsset(url: url)
-        guard let track = try? await asset.loadTracks(withMediaType: .audio).first else { return nil }
+        guard let track = try? await asset.loadTracks(withMediaType: .audio).first else { return (nil, []) }
         
         let outputSettings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatLinearPCM),
@@ -57,7 +114,7 @@ class AudioWaveformView: UIView {
             AVLinearPCMBitDepthKey: 16
         ]
         
-        guard let reader = try? AVAssetReader(asset: asset) else { return nil }
+        guard let reader = try? AVAssetReader(asset: asset) else { return (nil, []) }
         let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
         reader.add(output)
         reader.startReading()
@@ -70,7 +127,7 @@ class AudioWaveformView: UIView {
             
             let length = CMBlockBufferGetDataLength(blockBuffer)
             var data = Data(count: length)
-            _ = data.withUnsafeMutableBytes { (bufferPointer: UnsafeMutableRawBufferPointer) in
+            _ = data.withUnsafeMutableBytes { bufferPointer in
                 CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: bufferPointer.baseAddress!)
             }
             
@@ -82,7 +139,7 @@ class AudioWaveformView: UIView {
             CMSampleBufferInvalidate(buffer)
         }
         
-        guard !sampleData.isEmpty else { return nil }
+        guard !sampleData.isEmpty else { return (nil, []) }
         
         let safeWidth = max(1, Int(size.width))
         let samplesPerPixel = max(1, sampleData.count / safeWidth)
@@ -91,69 +148,20 @@ class AudioWaveformView: UIView {
         for i in stride(from: 0, to: sampleData.count, by: samplesPerPixel) {
             let start = i
             let end = min(i + samplesPerPixel, sampleData.count)
-            if start >= end { continue }
-
             let slice = sampleData[start..<end]
             guard !slice.isEmpty else { continue }
-
-        
+            
             let maxSample = Int(slice.max() ?? 0)
             let minSample = Int(slice.min() ?? 0)
             let peak = max(abs(minSample), abs(maxSample))
-
             normalizedSamples.append(CGFloat(peak))
         }
-
         
         let maxAmplitude = normalizedSamples.max() ?? 0.1
         let scaledSamples: [CGFloat] = maxAmplitude > 0.001
             ? normalizedSamples.map { $0 / maxAmplitude }
             : Array(repeating: 0, count: normalizedSamples.count)
         
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let image = renderer.image { context in
-            color.setFill()
-            context.cgContext.setLineWidth(0)
-            
-            let barWidth: CGFloat = 3
-            let spacing: CGFloat = 2
-            let totalBars = max(1, Int(size.width / (barWidth + spacing)))
-            let samplesPerBar = max(1, scaledSamples.count / totalBars)
-            
-            for i in 0..<totalBars {
-                let start = i * samplesPerBar
-                let end = min(start + samplesPerBar, scaledSamples.count)
-                if start >= end { continue }
-                
-                let slice = scaledSamples[start..<end]
-                let avg: CGFloat = slice.isEmpty ? 0 : (slice.reduce(0, +) / CGFloat(slice.count))
-                
-                let barHeight = avg * size.height
-                let x = CGFloat(i) * (barWidth + spacing)
-                let y = (size.height - barHeight) / 2
-                
-                let rect = CGRect(x: x, y: y, width: barWidth, height: barHeight)
-                let path = UIBezierPath(roundedRect: rect, cornerRadius: barWidth / 2)
-                path.fill()
-            }
-        }
-        
-        return image
-    }
-}
-
-// MARK: - ViewCodeProtocol
-extension AudioWaveformView: ViewCodeProtocol {
-    func addSubViews() {
-        addSubview(imageView)
-    }
-    
-    func setupConstraints() {
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: bottomAnchor)
-        ])
+        return (nil, scaledSamples)
     }
 }

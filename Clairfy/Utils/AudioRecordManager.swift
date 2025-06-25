@@ -93,6 +93,11 @@ class AudioRecordManager {
         timer = nil
         stopRecordingAnimation()
     }
+    
+//    func pauseAudio() {
+//        audioPlayer?.pause()
+//        displayLink?.invalidate()
+//    }
         
     func stopRecording() {
         self.stopWaveformMetering()

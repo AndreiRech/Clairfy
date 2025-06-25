@@ -9,12 +9,12 @@ import AVFoundation
 import UIKit
 
 // MARK: - AVAudioPlayerDelegate
-extension AnalysisViewController: AVAudioPlayerDelegate {
-    
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        audioComponent.playButtonState = .play
-        isPlaying = false
-        print("✅ Áudio terminou de tocar")
-    }
-    
-}
+//extension AnalysisViewController: AVAudioPlayerDelegate {
+//    
+//    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+//        audioComponent.playButtonState = .play
+//        isPlaying = false
+//        print("✅ Áudio terminou de tocar")
+//    }
+//    
+//}

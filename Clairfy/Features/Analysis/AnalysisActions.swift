@@ -180,31 +180,30 @@ extension AnalysisViewController {
 //    }
     
     @objc internal func playButtonTapped() {
-        if let player = audioPlayer {
-            if player.isPlaying {
-                player.pause()
-                audioComponent.playButtonState = .play
-                print("⏸ Áudio pausado")
-            } else {
-                player.play()
-                audioComponent.playButtonState = .pause
-                print("▶️ Áudio retomado")
-            }
+        // Se já está tocando, pausa
+        if audioComponent.audioPlayer?.isPlaying == true {
+            audioComponent.pauseAudio()
+            audioComponent.playButtonState = .play
+            print("⏸ Áudio pausado")
             return
         }
 
+        // Verifica se caminho do áudio existe
         guard let fileName = consultation?.audio?.audioPath else { return }
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let url = documents.appendingPathComponent(fileName)
 
-        if !FileManager.default.fileExists(atPath: url.path) {
+        // Verifica se arquivo existe
+        guard FileManager.default.fileExists(atPath: url.path) else {
             print("❌ Arquivo de áudio não encontrado no caminho: \(url.path)")
             return
         }
-        
+
+        // Informações úteis para debug
         let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
         print("📏 Tamanho do arquivo:", attributes?[.size] ?? "Desconhecido")
 
+        // Configura AVAudioSession
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
@@ -213,17 +212,16 @@ extension AnalysisViewController {
             print("❌ Erro ao configurar AVAudioSession:", error)
         }
 
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-            audioComponent.playButtonState = .pause
-            print("🎵 Tocando áudio: \(url.path)")
-        } catch {
-            print("❌ Erro ao tocar o áudio: \(error.localizedDescription)")
-        }
+        // Descolore a wave antes de tocar novamente
+        audioComponent.soundWaveImageView.resetWaveformProgress()
+
+        // Configura e toca via AudioComponent (centraliza tudo lá)
+        audioComponent.preparePlayback(with: url)
+        audioComponent.playAudio()
+        audioComponent.playButtonState = .pause
+        print("▶️ Áudio iniciado via AudioComponent")
     }
+
 
     @objc internal func trashButtonTapped() {
         print("Trash button tapped")

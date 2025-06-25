@@ -1,7 +1,96 @@
 import UIKit
+import AVFoundation
+
+protocol AudioComponentDelegate: AnyObject {
+    func audioComponentDidFinishPlaying(_ component: AudioComponent)
+}
+
 
 class AudioComponent: UIView {
+    func resetWaveformProgress() {
+        soundWaveImageView.progress = 0.0
+    }
+
     // MARK: Subviews
+    var audioPlayer: AVAudioPlayer?
+    private var displayLink: CADisplayLink?
+
+    // MARK: Delegate
+    weak var delegate: AudioComponentDelegate?
+
+    // MARK: Properties
+    var audioPath: String? {
+        didSet {
+            print("Caminho do áudio definido: \(audioPath ?? "sem caminho")")
+        }
+    }
+
+    var playButtonState: PlayButtonState = .play {
+        didSet {
+            updatePlayButtonIcon()
+        }
+    }
+
+    // MARK: Public API
+    func preparePlayback(with url: URL) {
+        if audioPlayer == nil || audioPlayer?.url != url {
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: url)
+                audioPlayer?.delegate = self
+            } catch {
+                print("Erro ao preparar player: \(error)")
+            }
+        }
+        stopProgressAnimation()
+        soundWaveImageView.progress = 0.0
+        playButtonState = .play
+    }
+
+    func playAudio() {
+        guard let player = audioPlayer else { return }
+        if !player.isPlaying {
+            player.play()
+            startProgressAnimation()
+            playButtonState = .pause
+        }
+    }
+
+    func pauseAudio() {
+        audioPlayer?.pause()
+        stopProgressAnimation()
+        playButtonState = .play
+    }
+
+    func stopAudio() {
+        audioPlayer?.stop()
+        stopProgressAnimation()
+        soundWaveImageView.progress = 0.0
+        playButtonState = .play
+    }
+
+    // MARK: - Progress Animation
+    private func startProgressAnimation() {
+        displayLink?.invalidate()
+        displayLink = CADisplayLink(target: self, selector: #selector(updateWaveProgress))
+        displayLink?.add(to: .main, forMode: .common)
+    }
+
+    private func stopProgressAnimation() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+
+    @objc private func updateWaveProgress() {
+        guard let player = audioPlayer, player.duration > 0 else { return }
+        let progress = CGFloat(player.currentTime / player.duration)
+        soundWaveImageView.progress = min(progress, 1.0)
+
+        if !player.isPlaying {
+            stopProgressAnimation()
+        }
+    }
+
+    // MARK: - Subviews
     private lazy var backgroundView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -10,12 +99,13 @@ class AudioComponent: UIView {
         view.layer.masksToBounds = true
         return view
     }()
-    
+
     lazy var soundWaveImageView: AudioWaveformView = {
         let waveformView = AudioWaveformView()
         waveformView.translatesAutoresizingMaskIntoConstraints = false
         waveformView.layer.cornerRadius = 8
         waveformView.clipsToBounds = true
+        waveformView.delegate = self
         return waveformView
     }()
 
@@ -26,7 +116,6 @@ class AudioComponent: UIView {
         label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         label.textAlignment = .left
         label.textColor = UIColor(named: "Label-Primary")
-        label.numberOfLines = 1
         return label
     }()
 
@@ -37,7 +126,6 @@ class AudioComponent: UIView {
         label.textColor = .secondaryLabel
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
-        label.numberOfLines = 1
         return label
     }()
 
@@ -48,7 +136,6 @@ class AudioComponent: UIView {
         label.textColor = .secondaryLabel
         label.font = UIFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
         label.textAlignment = .left
-        label.numberOfLines = 1
         return label
     }()
 
@@ -57,10 +144,13 @@ class AudioComponent: UIView {
         let button = UIButton(type: .system)
         button.backgroundColor = .clairBlue
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setImage(UIImage(systemName: "play.fill"), for: .normal)
+        let iconSize: CGFloat = 17
+        let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
+        let icon = UIImage(systemName: "play.fill", withConfiguration: config)
+        button.setImage(icon, for: .normal)
         button.imageView?.contentMode = .scaleAspectFit
         button.tintColor = .tertiarySystemBackground
-        button.layer.cornerRadius = 19
+        button.layer.cornerRadius = 23
         return button
     }()
 
@@ -71,7 +161,6 @@ class AudioComponent: UIView {
         stack.axis = .vertical
         stack.spacing = 4
         stack.alignment = .leading
-        stack.distribution = .fill
         return stack
     }()
 
@@ -81,7 +170,6 @@ class AudioComponent: UIView {
         stack.axis = .horizontal
         stack.spacing = 16
         stack.alignment = .center
-        stack.distribution = .fill
         return stack
     }()
 
@@ -90,12 +178,10 @@ class AudioComponent: UIView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .vertical
         stack.spacing = 16
-        stack.alignment = .fill
-        stack.distribution = .fill
         return stack
     }()
 
-    // MARK: Properties
+    // MARK: Getters e Setters
     var title: String? {
         get { audioTitleLabel.text }
         set { audioTitleLabel.text = newValue }
@@ -125,22 +211,10 @@ class AudioComponent: UIView {
         get { audioDurationLabel.textColor }
         set { audioDurationLabel.textColor = newValue }
     }
-    
+
     var playbutton: UIButton {
         get { playButton }
         set { playButton = newValue }
-    }
-
-    var audioPath: String? {
-        didSet {
-            print("Caminho do áudio definido: \(audioPath ?? "sem caminho")")
-        }
-    }
-    
-    var playButtonState: PlayButtonState = .play {
-        didSet {
-            updatePlayButtonIcon()
-        }
     }
 
     // MARK: Init
@@ -152,32 +226,46 @@ class AudioComponent: UIView {
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        soundWaveImageView.delegate = self
     }
 
     // MARK: - Button Animations
     private func setupButtonAnimations() {
-        let button = playButton
-        button.addTarget(self, action: #selector(buttonTouchDown(_:)), for: [.touchDown, .touchDragEnter])
-        button.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchDragExit, .touchCancel])
+        playButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: [.touchDown, .touchDragEnter])
+        playButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchDragExit, .touchCancel])
     }
-    
+
     private func updatePlayButtonIcon() {
         let systemName: String
         switch playButtonState {
-            case .play:
-                systemName = "play.fill"
-            case .pause:
-                systemName = "pause.fill"
+            case .play: systemName = "play.fill"
+            case .pause: systemName = "pause.fill"
         }
-        
-        // Usando peso bold como padrão
+
         let config = UIImage.SymbolConfiguration(weight: .bold)
         playButton.setImage(UIImage(systemName: systemName, withConfiguration: config), for: .normal)
     }
 
-    private func updateIconWeight(imageView: UIImageView, systemName: String, weight: UIImage.SymbolWeight) {
-        let config = UIImage.SymbolConfiguration(weight: weight)
-        imageView.image = UIImage(systemName: systemName, withConfiguration: config)
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        let feedback = UIImpactFeedbackGenerator(style: .medium)
+        feedback.prepare()
+        feedback.impactOccurred(intensity: 0.5)
+
+        UIView.animate(withDuration: 0.4, delay: 0, options: [.allowUserInteraction]) {
+            sender.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+            sender.alpha = 0.9
+        }
+    }
+
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.4,
+                       delay: 0,
+                       usingSpringWithDamping: 0.4,
+                       initialSpringVelocity: 0.5,
+                       options: [.curveEaseOut, .allowUserInteraction]) {
+            sender.transform = .identity
+            sender.alpha = 1.0
+        }
     }
 }
 
@@ -201,49 +289,34 @@ extension AudioComponent: ViewCodeProtocol {
             mainStackView.leadingAnchor.constraint(equalTo: backgroundView.leadingAnchor, constant: padding),
             mainStackView.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -padding),
             mainStackView.bottomAnchor.constraint(equalTo: backgroundView.bottomAnchor, constant: -padding),
-            
-            playButton.heightAnchor.constraint(equalToConstant: 38),
-            playButton.widthAnchor.constraint(equalToConstant: 38),
 
-            // Sound wave image
+            playButton.heightAnchor.constraint(equalToConstant: 46),
+            playButton.widthAnchor.constraint(equalToConstant: 46),
+
             soundWaveImageView.heightAnchor.constraint(equalToConstant: 40),
         ])
     }
 }
 
-extension AudioComponent {
-    @objc private func buttonTouchDown(_ sender: UIButton) {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.prepare()
-        generator.impactOccurred()
-
-        UIView.animate(withDuration: 0.1,
-                       delay: 0,
-                       options: [.curveEaseIn, .allowUserInteraction],
-                       animations: {
-            sender.superview?.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            sender.superview?.alpha = 0.9
-        })
+// MARK: - AVAudioPlayerDelegate
+extension AudioComponent: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        stopProgressAnimation()
+        soundWaveImageView.progress = 1.0
+        playButtonState = .play
+        delegate?.audioComponentDidFinishPlaying(self)
     }
+}
 
-    @objc private func buttonTouchUp(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.5,
-                       delay: 0,
-                       usingSpringWithDamping: 0.4,
-                       initialSpringVelocity: 0.5,
-                       options: [.curveEaseOut, .allowUserInteraction],
-                       animations: {
-            sender.superview?.transform = CGAffineTransform(scaleX: 1.02, y: 1.02)
-            sender.superview?.alpha = 1.0
-        }, completion: { _ in
-            UIView.animate(withDuration: 0.3) {
-                sender.superview?.transform = .identity
-            }
-
-            if sender.isTouchInside {
-                let generator = UIImpactFeedbackGenerator(style: .soft)
-                generator.impactOccurred()
-            }
-        })
+// MARK: - AudioWaveformViewDelegate
+extension AudioComponent: AudioWaveformViewDelegate {
+    func waveformView(_ waveformView: AudioWaveformView, didScrubTo progress: CGFloat) {
+        guard let player = audioPlayer else { return }
+        let newTime = TimeInterval(progress) * player.duration
+        player.currentTime = newTime
+        soundWaveImageView.progress = progress
+        if !player.isPlaying {
+            playButtonState = .play
+        }
     }
 }
