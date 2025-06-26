@@ -50,7 +50,7 @@ class AudioWaveformView: UIView {
     // MARK: Drawing
     override func draw(_ rect: CGRect) {
         guard !samples.isEmpty else { return }
-        guard let ctx = UIGraphicsGetCurrentContext() else { return }
+        guard let _ = UIGraphicsGetCurrentContext() else { return }
 
         let barWidth: CGFloat = 3
         let spacing: CGFloat = 2

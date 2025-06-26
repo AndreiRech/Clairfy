@@ -107,6 +107,15 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return stackView
     }()
     
+    lazy var bottomStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [timerLabel, visualizerView, buttonsStackView])
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.distribution = .equalSpacing
+        return stack
+    }()
+    
     // MARK: Proprieties
     var startingRecording: Bool = false
     
@@ -155,37 +164,27 @@ extension VoiceRecordingViewController: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(recordingImage)
         view.addSubview(recordingTapArea)
-        view.addSubview(timerLabel)
-        view.addSubview(visualizerView)
-        view.addSubview(buttonsStackView)
+        view.addSubview(bottomStack)
     }
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            
-            
-            
             recordingImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             recordingImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             recordingImage.widthAnchor.constraint(equalToConstant: 328),
             recordingImage.heightAnchor.constraint(equalToConstant: 328),
             
             recordingTapArea.topAnchor.constraint(equalTo: recordingImage.topAnchor),
-            
             recordingTapArea.bottomAnchor.constraint(equalTo: recordingImage.bottomAnchor),
             recordingTapArea.leadingAnchor.constraint(equalTo: recordingImage.leadingAnchor),
-            recordingTapArea.trailingAnchor.constraint(equalTo: recordingImage.trailingAnchor),
+            recordingTapArea.trailingAnchor.constraint(equalTo:recordingImage.trailingAnchor),
             
-            timerLabel.topAnchor.constraint(equalTo: recordingImage.bottomAnchor, constant: 40),
-            timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            bottomStack.topAnchor.constraint(equalTo: recordingTapArea.bottomAnchor, constant: 64),
+            bottomStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            bottomStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
             
-            visualizerView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
-            visualizerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             visualizerView.heightAnchor.constraint(equalToConstant: 100),
             visualizerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-            
-            buttonsStackView.topAnchor.constraint(equalTo: visualizerView.bottomAnchor, constant: 40),
-            buttonsStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             recordButton.widthAnchor.constraint(equalToConstant: 92),
             recordButton.heightAnchor.constraint(equalToConstant: 92),
