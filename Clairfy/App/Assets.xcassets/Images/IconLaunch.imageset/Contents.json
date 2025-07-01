@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "App Icon - Dark 1.png",
+      "filename" : "CDark.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -12,12 +12,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 2.png",
+      "filename" : "CLight.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "App Icon - Dark 2.png",
+      "filename" : "CDark@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
@@ -28,12 +28,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 3.png",
+      "filename" : "CLight@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "App Icon - Dark 3.png",
+      "filename" : "CDark@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     },
@@ -44,12 +44,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 4.png",
+      "filename" : "CLight@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     },
     {
-      "filename" : "App Icon - Dark 4.png",
+      "filename" : "CDark 1.png",
       "idiom" : "iphone",
       "scale" : "1x"
     },
@@ -60,12 +60,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 5.png",
+      "filename" : "CLight 1.png",
       "idiom" : "iphone",
       "scale" : "1x"
     },
     {
-      "filename" : "App Icon - Dark 5.png",
+      "filename" : "CDark@2x 1.png",
       "idiom" : "iphone",
       "scale" : "2x"
     },
@@ -76,12 +76,12 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 6.png",
+      "filename" : "CLight@2x 1.png",
       "idiom" : "iphone",
       "scale" : "2x"
     },
     {
-      "filename" : "App Icon - Dark 6.png",
+      "filename" : "CDark@3x 1.png",
       "idiom" : "iphone",
       "scale" : "3x"
     },
@@ -92,7 +92,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "App Icon - Light 7.png",
+      "filename" : "CLight@3x 1.png",
       "idiom" : "iphone",
       "scale" : "3x"
     }
