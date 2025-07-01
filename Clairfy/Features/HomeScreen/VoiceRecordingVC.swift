@@ -208,33 +208,21 @@ extension VoiceRecordingViewController {
     }
        
     @objc func finishButtonTapped() {
-        recorder.showFinishConfirmationAlert()
+        if recorder.elapsedTime < 30 {
+            recorder.showTooShortAlert()
+        } else {
+            recorder.showFinishConfirmationAlert()
+        }
     }
        
     @objc func recordButtonTapped() {
         switch recorder.recordingState {
         case .stopped:
             recorder.startRecording()
-            recorder.audioRecorder?.record()
         case .paused:
-            recorder.audioRecorder?.record()
-            recorder.updateRecordButtonIcon()
-               
-            recorder.timer = Timer.scheduledTimer(
-                timeInterval: 0.01,
-                target: self,
-                selector: #selector(updateTimer),
-                userInfo: nil,
-                repeats: true
-            )
-            
-            recorder.startRecordingAnimation()
-            recorder.updateRecordButtonIcon()
+            recorder.resumeRecording()
         case .recording:
             recorder.pauseRecording()
-            recorder.audioRecorder?.pause()
-            recorder.timer?.invalidate()
-            recorder.timer = nil
         }
     }
     

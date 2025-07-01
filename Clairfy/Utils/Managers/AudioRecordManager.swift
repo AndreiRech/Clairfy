@@ -92,12 +92,26 @@ class AudioRecordManager {
         timer?.invalidate()
         timer = nil
         stopRecordingAnimation()
+        
+        audioRecorder?.pause()
     }
     
-//    func pauseAudio() {
-//        audioPlayer?.pause()
-//        displayLink?.invalidate()
-//    }
+    func resumeRecording() {
+        recordingState = .recording
+        audioRecorder?.record()
+        updateRecordButtonIcon()
+           
+        timer = Timer.scheduledTimer(
+            timeInterval: 0.01,
+            target: voiceRecordVC,
+            selector: #selector(voiceRecordVC.updateTimer),
+            userInfo: nil,
+            repeats: true
+        )
+        
+        startRecordingAnimation()
+        updateRecordButtonIcon()
+    }
         
     func stopRecording() {
         self.stopWaveformMetering()
@@ -174,6 +188,22 @@ class AudioRecordManager {
         voiceRecordVC.present(alert, animated: true)
     }
     
+    func showTooShortAlert() {
+        pauseRecording()
+        
+        let alert = UIAlertController(
+            title: "O audio é muito curto",
+            message: "Para o audio ser aceito, ele deve ter pelo menos 30 segundos de duração",
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Ok", style: .default)
+        
+        alert.addAction(cancelAction)
+        
+        voiceRecordVC.present(alert, animated: true)
+    }
+    
     func showDeleteConfirmationAlert() {
         let alert = UIAlertController(
             title: "Deletar Áudio",
@@ -223,7 +253,7 @@ class AudioRecordManager {
         changeScreen()
     }
     
-     private func changeScreen() {
+    private func changeScreen() {
         let renameVC = RenameViewController()
         renameVC.audioID = self.audioID
         
