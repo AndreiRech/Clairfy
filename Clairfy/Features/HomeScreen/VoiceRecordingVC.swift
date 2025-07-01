@@ -28,14 +28,6 @@ class VoiceRecordingViewController: UIViewController, AVAudioRecorderDelegate {
         return label
     }()
     
-    lazy var soundWaveImage: UIImageView = {
-        var imageView = UIImageView()
-        imageView.image = .soundWave
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
     private lazy var visualizerView: AudioVisualizerComponent = {
         let v = AudioVisualizerComponent()
         v.translatesAutoresizingMaskIntoConstraints = false
