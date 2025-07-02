@@ -101,6 +101,13 @@ class ConsultationListVC: UIViewController {
         consultations = Persistence.shared.getAllConsultations()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isSelecting {
+            toggleSelection()
+        }
+    }
+    
     // MARK: Functions
     func additionalSetup() {
         title = "Áudios"
@@ -135,6 +142,22 @@ class ConsultationListVC: UIViewController {
         }
         
         selectedIndexPaths.removeAll()
+    }
+    
+    func toggleSelection() {
+        isSelecting.toggle()
+        tableView.allowsMultipleSelection = isSelecting
+        deselectAll()
+        
+        tableView.reloadData()
+            
+        selectButtonItem.title = isSelecting ? "Cancelar" : "Selecionar"
+            
+        if isSelecting {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(deleteSelectedItems))
+        } else {
+            navigationItem.leftBarButtonItem = nil
+        }
     }
 }
 
@@ -276,19 +299,7 @@ extension ConsultationListVC {
     }
     
     @objc func selectButtonTapped() {
-        isSelecting.toggle()
-        tableView.allowsMultipleSelection = isSelecting
-        deselectAll()
-        
-        tableView.reloadData()
-            
-        selectButtonItem.title = isSelecting ? "Cancelar" : "Selecionar"
-            
-        if isSelecting {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(deleteSelectedItems))
-        } else {
-            navigationItem.leftBarButtonItem = nil
-        }
+        toggleSelection()
     }
     
     @objc func buttonTapped() {

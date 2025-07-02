@@ -32,6 +32,8 @@ class OnboardingPageVC: UIViewController {
         stack.axis = .vertical
         stack.spacing = 24
         stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.layoutMargins = .init(top: 0, left: 14, bottom: 0, right: 14)
+        stack.isLayoutMarginsRelativeArrangement = true
         return stack
     }()
     
@@ -70,6 +72,16 @@ class OnboardingPageVC: UIViewController {
         pageControl.currentPageIndicatorTintColor = .white
         pageControl.pageIndicatorTintColor = .lightGray
         return pageControl
+    }()
+    
+    lazy var bottomStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [textStack, pageControl, buttonStack])
+        stack.axis = .vertical
+        stack.alignment = .fill
+//        stack.distribution = .fillProportionally
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
     }()
     
     // MARK: Proprieties
@@ -119,28 +131,19 @@ class OnboardingPageVC: UIViewController {
 extension OnboardingPageVC: ViewCodeProtocol {
     func addSubViews() {
         view.addSubview(imageView)
-        view.addSubview(textStack)
-        view.addSubview(buttonStack)
-        view.addSubview(pageControl)
+        view.addSubview(bottomStack)
     }
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
+            imageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 80),
             imageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             imageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             
-            textStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 0),
-            textStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 30),
-            textStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -30),
-            
-            pageControl.topAnchor.constraint(equalTo: textStack.bottomAnchor, constant: 16),
-            pageControl.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            pageControl.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            
-            buttonStack.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 16),
-            buttonStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            buttonStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            bottomStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: -24),
+            bottomStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            bottomStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            bottomStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
             
             nextButton.heightAnchor.constraint(equalToConstant: 40),
         ])

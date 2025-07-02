@@ -14,18 +14,6 @@ class AnalysisViewController: UIViewController {
         return button
     }()
     
-    internal var analysisGenerated: Bool = false {
-        didSet {
-            updateContentVisibility()
-        }
-    }
-    
-    internal var isLoading: Bool = false {
-        didSet {
-            updateLoadingState()
-        }
-    }
-    
     internal lazy var loadingView: LoaderView = {
         let view = LoaderView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -48,8 +36,6 @@ class AnalysisViewController: UIViewController {
     internal lazy var loader = LoaderView()
     
     internal var audioPlayer: AVAudioPlayer?
-    
-    internal var isPlaying = false
     
     internal let scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -107,6 +93,22 @@ class AnalysisViewController: UIViewController {
         }
     }
     
+    internal var analysisGenerated: Bool = false {
+        didSet {
+            updateContentVisibility()
+        }
+    }
+    
+    internal var isLoading: Bool = false {
+        didSet {
+            updateLoadingState()
+        }
+    }
+    
+    var transcriptionManager = TranscriptionManager()
+    
+    internal var isPlaying = false
+    
     // MARK: Init
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -131,6 +133,7 @@ class AnalysisViewController: UIViewController {
         setupLongPressGesture()
         
         audioComponent.playbutton.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+        transcriptionManager.delegate = self
     }
     
     private func renameAudio(name: String) {
@@ -272,6 +275,33 @@ extension AnalysisViewController: ViewCodeProtocol {
 
 }
 
+extension AnalysisViewController: TranscriptionManagerDelegate {
+    func didChangeLoadingState(_ isLoading: Bool) {
+        self.isLoading = isLoading
+    }
+
+    func didFinishTranscription(success: Bool) {
+        self.analysisGenerated = success
+    }
+    
+    func didChangeConsultation(_ consultation: ConsultationModel?) {
+        self.consultation = consultation
+    }
+    
+    func didErrorHappend() {
+        let alert = UIAlertController(
+            title: "Ocorreu um erro",
+            message: "Houve um erro durante a transcrição do áudio. Verifique sua conexão e tente novamente!",
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Ok", style: .default)
+        alert.addAction(cancelAction)
+        
+        self.present(alert, animated: true)
+    }
+}
+
 extension AnalysisViewController: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         audioComponent.playButtonState = .play
@@ -281,132 +311,9 @@ extension AnalysisViewController: AVAudioPlayerDelegate {
 
 extension AnalysisViewController {
     @objc internal func gerarAnalise() {
-        guard let audioPath = consultation?.audio?.audioPath else {
-            print("❌ Caminho do áudio não encontrado. \(consultation?.audio?.audioPath ?? "Nenhum")")
-            return
-        }
-
-        isLoading = true
-
-        let fileManager = FileManager.default
-        let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let originalURL = documentsDir.appendingPathComponent(audioPath)
-        let destinationURL = documentsDir.appendingPathComponent("audioTranscricao.m4a")
-
-        do {
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                try fileManager.removeItem(at: destinationURL)
-            }
-            try fileManager.copyItem(at: originalURL, to: destinationURL)
-            print("📥 Áudio copiado para: \(destinationURL.path)")
-        } catch {
-            print("❌ Erro ao copiar o áudio:", error.localizedDescription)
-            isLoading = false
-            return
-        }
-
-        let api = APIchatGPT()
-        print("🎙️ Iniciando transcrição...")
-
-        api.transcreverAudio(audioFileURL: destinationURL) { [weak self] transcricao in
-            guard let self = self else { return }
-
+        transcriptionManager.gerarAnalise(for: consultation) { [weak self] success in
             DispatchQueue.main.async {
-                guard let transcricao = transcricao, !transcricao.isEmpty else {
-                    print("❌ Transcrição vazia ou nula.")
-                    self.isLoading = false
-                    return
-                }
-
-                print("📝 Transcrição recebida:")
-                print(transcricao)
-
-                print("💬 Enviando para resumo...")
-
-                // cpa eh aqui q nn ta adicionando no paciente?? mas o didctarized eh feito tmb, nn faz sentido!! vsf to bugado
-                api.resumirTexto(transcricao, type: "doctor") { resultDoctor in
-                    DispatchQueue.main.async {
-                        guard let resultDoctor = resultDoctor, let jsonDoctorData = resultDoctor.data(using: .utf8) else {
-                            print("❌ Erro ao receber ou converter o resumo do doctor.")
-                            self.isLoading = false
-                            return
-                        }
-
-                        var summary: String?
-                        var keyWords: [String] = []
-
-                        do {
-                            let decoder = JSONDecoder()
-                            let apiResponseDoctor = try decoder.decode(DoctorResponse.self, from: jsonDoctorData)
-                            summary = apiResponseDoctor.summary
-                            keyWords = apiResponseDoctor.keyWords
-                            print("✅ Doctor Summary: \(summary ?? "Nenhum")")
-                            print("✅ Doctor Keywords: \(keyWords)")
-                        } catch {
-                            print("❌ Erro ao decodificar JSON do doctor: \(error.localizedDescription)")
-                            self.isLoading = false
-                            return
-                        }
-
-                        // aqui seria o do paciente, entao pq nn ta atualizando?
-                        api.resumirTexto(transcricao, type: "patient") { resultPatient in
-                            DispatchQueue.main.async {
-                                guard let resultPatient = resultPatient, let jsonPatientData = resultPatient.data(using: .utf8) else {
-                                    print("❌ Erro ao receber ou converter o resumo do patient.")
-                                    self.isLoading = false
-                                    return
-                                }
-
-                                var didctarized: String?
-                                var actionPoints: [String] = []
-
-                                do {
-                                    let decoder = JSONDecoder()
-                                    let apiResponsePatient = try decoder.decode(PatientResponse.self, from: jsonPatientData)
-                                    didctarized = apiResponsePatient.didctarized
-                                    actionPoints = apiResponsePatient.actionPoints
-                                    print("✅ Patient Didctarized: \(didctarized ?? "Nenhum")")
-                                    print("✅ Patient ActionPoints: \(actionPoints)")
-                                } catch {
-                                    print("❌ Erro ao decodificar JSON do patient: \(error.localizedDescription)")
-                                    self.isLoading = false
-                                    return
-                                }
-
-                                // Se chegou aqui, tudo foi bem com as duas APIs.
-                                guard let summary = summary, let didctarized = didctarized else {
-                                    print("❌ Dados incompletos após os dois resumos.")
-                                    self.isLoading = false
-                                    return
-                                }
-
-                                let transcricaoModel = TranscriptionModel(
-                                    id: UUID(),
-                                    transcription: transcricao,
-                                    summary: summary,
-                                    didctarized: didctarized,
-                                    keyWords: keyWords,
-                                    actionPoints: actionPoints
-                                )
-
-                                Persistence.shared.createTranscription(transcricaoModel)
-
-                                guard let consultation = self.consultation else {
-                                    print("❌ Consulta não encontrada.")
-                                    self.isLoading = false
-                                    return
-                                }
-
-                                _ = Persistence.shared.updateConsultation(consultation, transcription: transcricaoModel, audio: nil)
-                                
-                                self.consultation = Persistence.shared.getConsultation(by: consultation.id)
-                                
-                                self.isLoading = false
-                                self.analysisGenerated = true
-                            }
-                        }
-                    }
-                }
+                self?.analysisGenerated = success
             }
         }
     }
@@ -506,6 +413,5 @@ extension AnalysisViewController: AudioComponentDelegate {
     func audioComponentDidFinishPlaying(_ component: AudioComponent) {
         audioComponent.playButtonState = .play
         audioComponent.soundWaveImageView.progress = 1.0
-        print("🔁 Áudio finalizado, resetando estado")
     }
 }
