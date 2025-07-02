@@ -59,7 +59,7 @@ class APIchatGPT {
     
     private func createJsonBody(text: String, prompt: String) -> [String: Any] {
         let jsonBody: [String: Any] = [
-            "model": "gpt-4.1-nano-2025-04-14",
+            "model": "gpt-4.1-mini-2025-04-14",
             "messages": [
                 ["role": "system", "content": prompt],
                 ["role": "user", "content": text]
