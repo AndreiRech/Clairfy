@@ -148,6 +148,8 @@
 				DEVELOPMENT_TEAM = 7K37UYKQLZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -176,6 +178,8 @@
 				DEVELOPMENT_TEAM = 7K37UYKQLZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
