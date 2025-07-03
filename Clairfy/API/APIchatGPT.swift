@@ -1,46 +1,72 @@
 import Foundation
 
 class APIchatGPT {
-    private let apiKey = APIKeyManager.getAPIKey()
-       // MARK: - Transcrição de áudio
+    private let secureProvider = SecureData()
+
     func transcreverAudio(audioFileURL: URL, completion: @escaping (String?) -> Void) {
-        let boundary = UUID().uuidString
-        let body = createBody(boundary: boundary, audioFileURL: audioFileURL)
-        
-        let request = createRequest(
-            url: "https://api.openai.com/v1/audio/transcriptions",
-            method: "POST",
-            headers: [
-                "Authorization": "Bearer \(apiKey)",
-                "Content-Type": "multipart/form-data; boundary=\(boundary)"
-            ],
-            body: body
-        )
-        
-        sendRequest(request: request, completion: { json in
-            completion(json?["text"] as? String)
-        })
+        secureProvider.fetchAPIKey { [weak self] apiKey in
+            guard let apiKey = apiKey else {
+                completion(nil)
+                return
+            }
+
+            let boundary = UUID().uuidString
+            let body = self?.createBody(boundary: boundary, audioFileURL: audioFileURL)
+
+            let request = self?.createRequest(
+                url: "https://api.openai.com/v1/audio/transcriptions",
+                method: "POST",
+                headers: [
+                    "Authorization": "Bearer \(apiKey)",
+                    "Content-Type": "multipart/form-data; boundary=\(boundary)"
+                ],
+                body: body
+            )
+
+            if let request = request {
+                self?.sendRequest(request: request) { json in
+                    completion(json?["text"] as? String)
+                }
+            } else {
+                completion(nil)
+            }
+        }
     }
-      
-    func resumirTexto(_ text: String, type: String, completion: @escaping (String?) -> Void) {
-        let prompt = type == "doctor" ? Prompts.doctor : Prompts.patient
 
-        let jsonBody = createJsonBody(text: text, prompt: prompt)
-        
-        let request = createRequest(
-            url: "https://api.openai.com/v1/chat/completions",
-            method: "POST",
-            headers: [
-                "Authorization": "Bearer \(apiKey)",
-                "Content-Type": "application/json"
-            ],
-            jsonBody: jsonBody
-        )
+    func resumirTexto(_ text: String, category: String, completion: @escaping (String?) -> Void) {
+        secureProvider.fetchAPIKey { [weak self] apiKey in
+            guard let apiKey = apiKey else {
+                completion(nil)
+                return
+            }
 
-        sendRequest(request: request, completion: { json in
-            let content = ((json?["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any])?["content"] as? String
-            completion(content)
-        })
+            self?.secureProvider.fetchPrompts { prompts in
+                guard let promptDict = prompts?.first(where: { $0["category"] as? String == category }), let prompt = promptDict["prompt"] as? String else {
+                        completion(nil)
+                        return
+                }
+
+                let jsonBody = self?.createJsonBody(text: text, prompt: prompt)
+                let request = self?.createRequest(
+                    url: "https://api.openai.com/v1/chat/completions",
+                    method: "POST",
+                    headers: [
+                        "Authorization": "Bearer \(apiKey)",
+                        "Content-Type": "application/json"
+                    ],
+                    jsonBody: jsonBody
+                )
+
+                if let request = request {
+                    self?.sendRequest(request: request) { json in
+                        let content = ((json?["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any])?["content"] as? String
+                        completion(content)
+                    }
+                } else {
+                    completion(nil)
+                }
+            }
+        }
     }
     
     private func createBody(boundary: String, audioFileURL: URL) -> Data {

@@ -145,11 +145,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7K37UYKQLZ;
+				DEVELOPMENT_TEAM = SSL59624G4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -175,11 +173,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7K37UYKQLZ;
+				DEVELOPMENT_TEAM = SSL59624G4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
