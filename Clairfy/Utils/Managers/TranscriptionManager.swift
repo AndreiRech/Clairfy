@@ -3,7 +3,7 @@ import UIKit
 
 final class TranscriptionManager {
     weak var delegate: TranscriptionManagerDelegate?
-    private var api = APIchatGPT()
+    private var api = ApiConnect()
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
 
     func gerarAnalise(for consultation: ConsultationModel?, completion: @escaping (Bool) -> Void) {
@@ -31,68 +31,23 @@ final class TranscriptionManager {
             return
         }
 
-        api.transcreverAudio(audioFileURL: destinationURL) { [weak self] transcricao in
-            self?.handleTranscriptionResult(transcricao, for: consultation)
-        }
-    }
-
-    private func handleTranscriptionResult(_ transcricao: String?, for consultation: ConsultationModel?) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            guard let transcricao = transcricao, !transcricao.isEmpty else {
-                self.handleTranscriptionError()
+        api.getResponse(audioFileURL: destinationURL) { [weak self] response in
+            guard let response = response else {
+                self?.handleTranscriptionError()
                 return
             }
-                
-            self.processDoctorSummary(transcricao, consultation: consultation)
+            self?.finalizeTranscription(response: response, consultation: consultation)
         }
     }
         
-    private func processDoctorSummary(_ transcricao: String, consultation: ConsultationModel?) {
-        api.resumirTexto(transcricao, category: "doctor") { [weak self] resultDoctor in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                guard let resultDoctor = resultDoctor,
-                        let jsonDoctorData = resultDoctor.data(using: .utf8),
-                        let doctorResponse = try? JSONDecoder().decode(DoctorResponse.self, from: jsonDoctorData)
-                else {
-                    self.handleTranscriptionError()
-                    return
-                }
-                    
-                self.processPatientSummary(transcricao, consultation: consultation, doctorResponse: doctorResponse)
-            }
-        }
-    }
-        
-    private func processPatientSummary(_ transcricao: String, consultation: ConsultationModel?, doctorResponse: DoctorResponse) {
-        api.resumirTexto(transcricao, category: "patient") { [weak self] resultPatient in
-            guard let self = self else { return }
-                
-            DispatchQueue.main.async {
-                guard let resultPatient = resultPatient,
-                        let jsonPatientData = resultPatient.data(using: .utf8),
-                        let patientResponse = try? JSONDecoder().decode(PatientResponse.self, from: jsonPatientData)
-                else {
-                    self.handleTranscriptionError()
-                    return
-                }
-                    
-                self.finalizeTranscription(transcricao: transcricao, consultation: consultation, doctorResponse: doctorResponse, patientResponse: patientResponse)
-            }
-        }
-    }
-        
-    private func finalizeTranscription(transcricao: String, consultation: ConsultationModel?, doctorResponse: DoctorResponse, patientResponse: PatientResponse) {
+    private func finalizeTranscription(response: TranscriptionDTO, consultation: ConsultationModel?) {
         let transcricaoModel = TranscriptionModel(
             id: UUID(),
-            transcription: transcricao,
-            summary: doctorResponse.summary,
-            didctarized: patientResponse.didctarized,
-            keyWords: doctorResponse.keyWords,
-            actionPoints: patientResponse.actionPoints
+            transcription: response.transcription,
+            summary: response.summary,
+            didctarized: response.didctarized,
+            keyWords: response.keyWords,
+            actionPoints: response.actionPoints
         )
             
         Persistence.shared.createTranscription(transcricaoModel)

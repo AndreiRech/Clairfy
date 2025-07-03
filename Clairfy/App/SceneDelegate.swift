@@ -5,6 +5,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        let api = ApiConnect()
+        api.getToken() { response in
+            guard let _ = response else { return }
+        }
             
         let viewController: UIViewController
         viewController = Persistence.isFirstTime() ? OnboardingVC() : ConsultationListVC()
