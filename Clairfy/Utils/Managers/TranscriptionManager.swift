@@ -50,7 +50,7 @@ final class TranscriptionManager {
     }
         
     private func processDoctorSummary(_ transcricao: String, consultation: ConsultationModel?) {
-        api.resumirTexto(transcricao, type: "doctor") { [weak self] resultDoctor in
+        api.resumirTexto(transcricao, category: "doctor") { [weak self] resultDoctor in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
@@ -68,7 +68,7 @@ final class TranscriptionManager {
     }
         
     private func processPatientSummary(_ transcricao: String, consultation: ConsultationModel?, doctorResponse: DoctorResponse) {
-        api.resumirTexto(transcricao, type: "patient") { [weak self] resultPatient in
+        api.resumirTexto(transcricao, category: "patient") { [weak self] resultPatient in
             guard let self = self else { return }
                 
             DispatchQueue.main.async {
