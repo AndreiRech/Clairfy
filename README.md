@@ -48,7 +48,7 @@ Fluxo do aplicativo:
 - Andrei Rech (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/rechandrei/)
 - Bernardo Fensterseifer (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/bernardo-fensterseifer-22b973318/)
 - Eduardo Ferrari (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/edurferrari/)
-- Leonardo Simon (Designer) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/leonardosimon/)
+- Leonardo Simon (designer) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/leonardosimon/)
 - Pablo Garcia (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/pablogarciadev/)
 
 ---
