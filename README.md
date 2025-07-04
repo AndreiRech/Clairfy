@@ -14,7 +14,7 @@ Fluxo do aplicativo:
 
 ---
 
-## Tecnologias aplicadas:
+## Tecnologias aplicadas
 - Design feito em Figma
 - UFoco em UX como diferencial do produto
 - Linguagem de programação utilizada: Swift
@@ -41,3 +41,14 @@ Fluxo do aplicativo:
 <img src="./Assets/Audio_Analise_Paciente_1_Light.png" alt="drawing" width="200"/>
 </div>
 </div>
+
+---
+
+## Time
+- Andrei Rech (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/rechandrei/)
+- Bernardo Fensterseifer (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/bernardo-fensterseifer-22b973318/)
+- Eduardo Ferrari (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/edurferrari/)
+- Leonardo Simon (Designer) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/leonardosimon/)
+- Pablo Garcia (dev) - [<img src="./Assets/linkedIn_logo.png" width="30"/>](https://www.linkedin.com/in/pablogarciadev/)
+
+---
