@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O necessita de acesso ao seu microfone</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SF-Pro-Text-Bold.otf</string>
@@ -30,5 +32,7 @@
 		<string>remote-notification</string>
 		<string>audio</string>
 	</array>
+	<key></key>
+	<string></string>
 </dict>
 </plist>
