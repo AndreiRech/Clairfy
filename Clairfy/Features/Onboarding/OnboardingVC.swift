@@ -15,19 +15,14 @@ class OnboardingVC: UIPageViewController {
                 if nextIndex < self.pageControllers.count {
                     self.setViewControllers([self.pageControllers[nextIndex]], direction: .forward, animated: true, completion: nil)
                 } else {
-                    let vc = ConsultationListVC()
-                    vc.firstTime = true
-                    Persistence.setFirstTimeDone()
-                    changeScreen(to: vc)
+                    // Ao chegar na última página, exibe o alerta de consentimento
+                    self.showConsentAlert()
                 }
             }
 
             vc.onSkip = { [weak self] in
-                guard let self = self else { return }
-                let vc = ConsultationListVC()
-                vc.firstTime = true
-                Persistence.setFirstTimeDone()
-                changeScreen(to: vc)
+                // Ao pular, também exibe o alerta de consentimento
+                self?.showConsentAlert()
             }
 
             controllers.append(vc)
@@ -65,6 +60,42 @@ class OnboardingVC: UIPageViewController {
         delegate = self
         dataSource = self
     }
+    
+    // Função para exibir o alerta de consentimento
+    private func showConsentAlert() {
+        let title = "Seu Compromisso de Uso"
+        let message = """
+        Ao continuar, você concorda com os seguintes pontos:
+
+        1. Consentimento do Paciente: É sua total e exclusiva responsabilidade obter a permissão explícita do paciente ANTES de iniciar qualquer gravação.
+
+        2. Ferramenta de Apoio, Não Diagnóstico: O Clairfy é uma ferramenta de suporte. Os resumos da IA NÃO são um diagnóstico médico e não substituem o julgamento clínico. As decisões de tratamento são de responsabilidade exclusiva do profissional.
+
+        3. Dever de Revisão Crítica: A IA pode cometer erros ou omissões. É seu dever OBRIGATÓRIO revisar e validar a precisão de todos os resumos antes de qualquer uso.
+
+        4. Isenção de Responsabilidade: Você assume total responsabilidade legal e ética pelo uso do aplicativo. Os desenvolvedores do Clairfy não se responsabilizam por quaisquer danos, erros clínicos ou violações legais decorrentes do uso da ferramenta.
+        """
+
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+
+        // Botão para aceitar os termos
+        let acceptAction = UIAlertAction(title: "Estou Ciente e Concordo", style: .default) { [weak self] _ in
+            // Ação ao aceitar: transiciona para a tela principal do app
+            let vc = ConsultationListVC()
+            vc.firstTime = true
+            Persistence.setFirstTimeDone()
+            self?.changeScreen(to: vc)
+        }
+
+        // Botão para cancelar
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel, handler: nil)
+
+        alertController.addAction(acceptAction)
+        alertController.addAction(cancelAction)
+
+        // Apresenta o alerta na tela
+        present(alertController, animated: true, completion: nil)
+    }
 }
 
 extension OnboardingVC: UIPageViewControllerDataSource {
@@ -88,3 +119,4 @@ extension OnboardingVC: UIPageViewControllerDelegate {
         }
     }
 }
+

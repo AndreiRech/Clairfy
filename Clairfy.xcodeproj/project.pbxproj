@@ -150,7 +150,7 @@
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O aplicativo utiliza o microfone para gravar mensagens de áudio e permitir que o usuário as reproduza e realize resumos do áudio gravado.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -180,7 +180,7 @@
 				INFOPLIST_FILE = Clairfy/App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clairfy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O app precisa de permissão para usar o seu microfone";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O aplicativo utiliza o microfone para gravar mensagens de áudio e permitir que o usuário as reproduza e realize resumos do áudio gravado.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

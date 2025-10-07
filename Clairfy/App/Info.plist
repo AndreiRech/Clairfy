@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneInjectionUsageDescription</key>
+	<string>O aplicativo utiliza o microfone para gravar mensagens de áudio e permitir que o usuário as reproduza e realize resumos do áudio gravado.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SF-Pro-Text-Bold.otf</string>
